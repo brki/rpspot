@@ -1,7 +1,5 @@
-# Django (1.8a1, /foo/bar) <-- currently using 1.8x stable branch from git, until 1.8 is released
-django-environ (0.3.0)
-pip (1.5.6)
-psycopg2 (2.6)
-pytz (2014.10)
-setuptools (3.6)
-wsgiref (0.1.2)
+-e git+https://github.com/django/django.git@259259a819a12a9ecfd0448c646899fad78e23e0#egg=Django-origin/stable/1.8.x
+django-environ==0.3.0
+psycopg2==2.6
+pytz==2014.10
+wsgiref==0.1.2
