@@ -1,4 +1,5 @@
 from datetime import datetime
+from operator import itemgetter
 from pytz import utc
 from urllib.request import urlopen
 from xml.etree import ElementTree
@@ -27,7 +28,8 @@ def playlist_to_python(xml_string, min_time=None):
             'album_release_year': song.find('release_date').text,
         })
 
-    return songs
+    sorted_songs = sorted(songs, key=itemgetter('time'))
+    return sorted_songs
 
 def get_playlist_from_file(file_name):
     with open(file_name, 'r') as f:
