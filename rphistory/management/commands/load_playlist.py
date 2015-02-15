@@ -13,13 +13,11 @@ class Command(BaseCommand):
         else:
             min_time = None
 
-        print "min_time: {}".format(min_time)
         latest_playlist = get_playlist_from_url()
         songs = playlist_to_python(latest_playlist, min_time=min_time)
 
 
         for song in songs:
-            print "song time: {}".format(song['time'])
             album = Album.objects.get_or_create(song['album_asin'], song['album'], song['album_release_year'])
             artist = Artist.objects.get_or_create(song['artist'])
             song_object = Song.objects.get_or_create(song['id'], song['title'], artist, album)
