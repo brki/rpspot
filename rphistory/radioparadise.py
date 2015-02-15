@@ -1,6 +1,6 @@
 from datetime import datetime
 from pytz import utc
-import urllib2
+from urllib.request import urlopen
 from xml.etree import ElementTree
 from .settings import RP_PLAYLIST_URL
 
@@ -37,5 +37,5 @@ def get_playlist_from_file(file_name):
 def get_playlist_from_url(url=None):
     if url is None:
         url = RP_PLAYLIST_URL
-    response = urllib2.urlopen(url)
+    response = urlopen(url)
     return response.read()
