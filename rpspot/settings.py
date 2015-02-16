@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/dev/ref/settings/
 import environ
 root = environ.Path(__file__) - 2
 
+
 # Sets env defaults and casting
 env = environ.Env(
     DEBUG=(bool, False),
@@ -103,3 +104,13 @@ USE_L10N = True
 USE_TZ = True
 
 
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+        'LOCATION': root('fs_cache', 'cache')
+    }
+}
+
+SPOTIFY_CACHE = 'default'
+SPOTIFY_CLIENT_ID = env.str('SPOTIFY_CLIENT_ID')
+SPOTIFY_CLIENT_SECRET = env.str('SPOTIFY_CLIENT_SECRET')
