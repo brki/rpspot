@@ -13,8 +13,8 @@ class Artist(models.Model):
 
     objects = ArtistManager()
 
-    def __unicode__(self):
-        return unicode("<Artist: {}>".format(self.name))
+    def __str__(self):
+        return "<Artist: {}>".format(self.name)
 
 
 class AlbumManager(models.Manager):
@@ -32,8 +32,8 @@ class Album(models.Model):
 
     objects = AlbumManager()
 
-    def __unicode__(self):
-        return unicode("<Album: {} ({})>".format(self.title, self.release_year))
+    def __str__(self):
+        return "<Album: {} ({})>".format(self.title, self.release_year)
 
 
 class SongManager(models.Manager):
@@ -52,13 +52,13 @@ class Song(models.Model):
 
     objects = SongManager()
 
-    def __unicode__(self):
-        return unicode("<Song: {}>".format(self.title))
+    def __str__(self):
+        return "<Song: {}>".format(self.title)
 
 
 class History(models.Model):
     song = models.ForeignKey(Song)
     played_at = models.DateTimeField(null=False, unique=True)
 
-    def __unicode__(self):
-        return unicode("History: {} played at {}".format(self.song_id, self.played_at))
+    def __str__(self):
+        return "History: {} played at {}".format(self.song_id, self.played_at)
