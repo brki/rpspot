@@ -1,6 +1,6 @@
 from unittest import TestCase
 import spotipy
-from spotify.spotify import spotify_cache, client_credentials_token
+from spotify.spotify import spotify_cache, client_credentials_token, find_track
 
 
 class ClientCredentialsToken(TestCase):
@@ -14,6 +14,7 @@ class ClientCredentialsToken(TestCase):
         token2 = client_credentials_token()
         self.assertEqual(token, token2)
 
+
 class SearchTrack(TestCase):
 
     def test_search_track(self):
@@ -22,4 +23,12 @@ class SearchTrack(TestCase):
         self.assertGreater(result['tracks']['total'], 1)
         for item in result['tracks']['items']:
             self.assertIn('CH', item['available_markets'])
+
+    def test_find_track(self):
+        result = find_track(
+            artist='Shriekback', track='All Lined Up', album='Natural History', country_code='CH')
+        self.assertIsNotNone(result)
+        self.assertIsNotNone(result.uri)
+        self.assertFalse(result.album_match)
+        self.assertIn('CH', result.available_markets)
 

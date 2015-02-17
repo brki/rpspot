@@ -1,4 +1,5 @@
 from base64 import b64encode
+from collections import namedtuple
 from django.conf import settings
 from django.core.cache import caches
 import requests
@@ -6,6 +7,11 @@ import spotipy
 
 CLIENT_CREDENTIALS_CACHE_KEY='spotify_client_credentials'
 CLIENT_CREDENTIALS_URL='https://accounts.spotify.com/api/token'
+
+TrackResult = namedtuple('TrackResult', 'uri album_match available_markets')
+
+def spotify():
+    return spotipy.Spotify(auth=client_credentials_token())
 
 def spotify_cache():
     return caches[settings.SPOTIFY_CACHE]
@@ -29,4 +35,59 @@ def fetch_new_client_credentials_token():
     return result['access_token'], result['token_type'], result['expires_in']
 
 
-#spotify = spotipy.Spotify()
+def find_track(track, artist=None, album=None, country_code=None):
+    """
+    Find a spotify track uri for the single best-matching track.
+
+    TrackResult.album_match is True if the track was found on the requested album
+
+    :param track: track title (optional)
+    :param artist: artist name (optional)
+    :param album: album title (optional)
+    :param country_code: uppercase two-letter country code (optional)
+    :return: TrackResult if a track found, None otherwise
+    """
+
+    def track_match(track, track_value):
+        return track == track_value
+
+    def artist_match(artist, artists):
+        if artist is None:
+            return True
+        for a in artists:
+            if a['name'].lower() == artist.lower():
+                return True
+        return False
+
+    def album_match(album_name, album):
+        if album_name is None:
+            return True
+        return album_name.lower() == album['name'].lower()
+
+    q = ['track:"{}"'.format(track)]
+    if artist:
+        q.append('artist:"{}"'.format(artist))
+
+    kwargs = {
+        'q': ' '.join(q),
+        'type': 'track',
+    }
+    if country_code:
+        kwargs['market'] = country_code
+
+    s = spotify()
+    results = s.search(**kwargs)
+    matches = []
+    if results['tracks']['total'] >= 1:
+        for item in results['tracks']['items']:
+            if artist_match(artist, item['artists']) and track_match(track, item['name']):
+                result = TrackResult(item['uri'], album_match(album, item['album']), item['available_markets'])
+                if result.album_match:
+                    return result
+                else:
+                    matches.append(result)
+    if matches:
+        # If no match at the album level, return the first artist + track match found
+        return matches[0]
+
+    return None
