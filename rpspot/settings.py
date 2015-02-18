@@ -56,6 +56,7 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rphistory',
+    'trackmap',
 ) + tuple(env('INSTALLED_APPS_EXTRA'))
 
 MIDDLEWARE_CLASSES = (

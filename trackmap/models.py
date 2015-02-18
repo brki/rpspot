@@ -9,9 +9,9 @@ class Track(models.Model):
     artist = models.CharField(max_length=255, blank=False, help_text="Primary artist name")
     artist_uri = models.CharField(max_length=120, help_text="A spotify artist uri")
     many_artists = models.BooleanField(default=False)
-    img_small_url = models.URLField()
-    img_medium_url = models.URLField()
-    img_large_url = models.URLField()
+    img_small_url = models.URLField(null=True)
+    img_medium_url = models.URLField(null=True)
+    img_large_url = models.URLField(null=True)
 
 
 class TrackAvailability(models.Model):
@@ -24,6 +24,6 @@ class TrackAvailability(models.Model):
 
 
 class TrackSearchHistory(models.Model):
-    rp_song = models.ForeignKey(Song, related_name="search_history", unique=True)
-    search_time = models.DateTimeField(auto_now=True, auto_now_add=True, null=False)
+    rp_song = models.OneToOneField(Song, related_name="search_history")
+    search_time = models.DateTimeField(null=False)
     found = models.BooleanField(default=False)
