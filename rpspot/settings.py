@@ -38,7 +38,7 @@ MEDIA_URL = 'media/'
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/dev/howto/static-files/
 STATIC_ROOT = public_root('static')
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 
 
 # SECURITY WARNING: keep the secret key used in production secret!
@@ -57,7 +57,7 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'rphistory',
     'trackmap',
-) + tuple(env('INSTALLED_APPS_EXTRA'))
+) + tuple(env.list('INSTALLED_APPS_EXTRA'),)
 
 MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -104,6 +104,7 @@ USE_L10N = True
 
 USE_TZ = True
 
+INTERNAL_IPS=tuple(env.list('INTERNAL_IPS', None, ['127.0.0.1']))
 
 CACHES = {
     'default': {
