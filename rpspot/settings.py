@@ -115,3 +115,53 @@ CACHES = {
 SPOTIFY_CACHE = 'default'
 SPOTIFY_CLIENT_ID = env.str('SPOTIFY_CLIENT_ID')
 SPOTIFY_CLIENT_SECRET = env.str('SPOTIFY_CLIENT_SECRET')
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': True,
+    'formatters': {
+        'standard': {
+            'format': '%(asctime)s [%(levelname)s] %(name)s: %(message)s'
+        },
+    },
+    'handlers': {
+        # 'default': {
+        #     'level':'DEBUG',
+        #     'class':'logging.handlers.RotatingFileHandler',
+        #     'filename': 'logs/mylog.log',
+        #     'maxBytes': 1024*1024*5, # 5 MB
+        #     'backupCount': 5,
+        #     'formatter':'standard',
+        # },
+        # 'request_handler': {
+        #     'level':'DEBUG',
+        #     'class':'logging.handlers.RotatingFileHandler',
+        #     'filename': 'logs/django_request.log',
+        #     'maxBytes': 1024*1024*5, # 5 MB
+        #     'backupCount': 5,
+        #     'formatter':'standard',
+        # },
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'standard'
+        },
+    },
+    'loggers': {
+        # '': {
+        #     'handlers': ['console'],
+        #     'level': 'DEBUG' if DEBUG else 'ERROR',
+        #     'propagate': True
+        # },
+        'trackmap.trackmap': {
+            'handlers': ['console'],
+            'level': 'DEBUG' if DEBUG else 'ERROR',
+            'propagate': True
+        },
+        # 'django.request': {
+        #     'handlers': ['request_handler'],
+        #     'level': 'DEBUG',
+        #     'propagate': False
+        # },
+    }
+}

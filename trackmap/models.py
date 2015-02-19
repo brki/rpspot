@@ -1,17 +1,22 @@
 from django.db import models
 from rphistory.models import Song
 
-class Track(models.Model):
-    uri = models.CharField(max_length=120, help_text="A spotify track uri", unique=True)
-    title = models.CharField(max_length=255, blank=False, help_text="Track title")
-    album = models.CharField(max_length=255, blank=False, help_text="Album title")
-    album_uri = models.CharField(max_length=120, help_text="A spotify album uri")
-    artist = models.CharField(max_length=255, blank=False, help_text="Primary artist name")
-    artist_uri = models.CharField(max_length=120, help_text="A spotify artist uri")
-    many_artists = models.BooleanField(default=False)
+
+class Album(models.Model):
+    uri = models.CharField(max_length=120, unique=True, help_text="A spotify album uri")
+    title = models.CharField(max_length=255, blank=False, help_text="Album title")
     img_small_url = models.URLField(null=True)
     img_medium_url = models.URLField(null=True)
     img_large_url = models.URLField(null=True)
+
+
+class Track(models.Model):
+    uri = models.CharField(max_length=120, help_text="A spotify track uri", unique=True)
+    title = models.CharField(max_length=255, blank=False, help_text="Track title")
+    album = models.ForeignKey(Album)
+    artist = models.CharField(max_length=255, blank=False, help_text="Primary artist name")
+    artist_uri = models.CharField(max_length=120, help_text="A spotify artist uri")
+    many_artists = models.BooleanField(default=False)
 
 
 class TrackAvailability(models.Model):
