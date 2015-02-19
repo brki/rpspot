@@ -28,6 +28,10 @@ def remove_accents(input_str):
 
 class TrackSearch(object):
 
+    rp_to_spotify_artist_map = {
+        'Bob Marley': 'Bob Marley & The Wailers',
+    }
+
     def __init__(self, query_limit=40, max_items_to_process=200):
         self.spotify = spotify()
         self.query_limit=query_limit
@@ -124,7 +128,7 @@ class TrackSearch(object):
         return all_items
 
     def simplified_text(self, string):
-        string = string.lower().replace(' & ', ' and ')
+        string = string.lower().replace(' & ', ' and ').replace(' + ', ' and ')
         return remove_accents(self.strip_non_words_pattern.sub('', string))
 
     def extract_artist_info(self, artist, artist_list):
@@ -258,4 +262,13 @@ class TrackSearch(object):
                 and track.artist() == artist_name.lower()
                 and track.album() == album_title.lower()
         )
+
+    def map_artist_name(self, artist_name):
+        """
+        Replace Radio Paradise name with Spotify name for some artists that are named differently by the two services.
+        :param artist_name:
+        :return: string
+        """
+        #TODO: should these be managed in the DB?
+        return self.rp_to_spotify_artist_map.get(artist_name, artist_name)
 

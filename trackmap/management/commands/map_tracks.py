@@ -11,18 +11,19 @@ log = getLogger(__name__)
 
 
 class Command(BaseCommand):
-    help = 'Maps new Radio Paradise playlist songs to spotify tracks'
+    help = 'Maps new Radio Paradise playlist songs to Spotify tracks'
 
     def handle(self, *args, **options):
 
         now = utc_now()
         track_search = TrackSearch()
-        new_songs = Song.objects.filter(search_history__isnull=True).select_related('album', 'artist')[:20]
+        new_songs = Song.objects.filter(search_history__isnull=True).select_related('album', 'artist')
         found_count = 0
         for song in new_songs:
-            log.debug("Processing %s - %s", song.artist.name, song.title)
+            artist_name = track_search.map_artist_name(song.artist.name)
+            log.debug("Processing %s - %s", artist_name, song.title)
             perfect_matches, matches = track_search.get_market_track_availability(
-                song, song.title, song.artist.name, song.album.title)
+                song, song.title, artist_name, song.album.title)
             # Prefer perfect matches.
             matches.update(perfect_matches)
             if matches:
