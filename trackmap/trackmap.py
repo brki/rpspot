@@ -258,9 +258,9 @@ class TrackSearch(object):
         :param album_title:
         :return: boolean
         """
-        return (track.title.lower == track_title.lower()
-                and track.artist() == artist_name.lower()
-                and track.album() == album_title.lower()
+        return (track.title.lower() == track_title.lower()
+                and track.artist.lower() == artist_name.lower()
+                and track.album.title.lower() == album_title.lower()
         )
 
     def map_artist_name(self, artist_name):
