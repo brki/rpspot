@@ -11,7 +11,7 @@ class PlaylistView(TemplateView):
         country = 'CH'
         context['tracks'] = Track.objects.get_available_tracks(country)
         context['playlist_url'] = 'spotify:trackset:Playlist:{}'.format(
-            ','.join(track.uri for track in context['tracks'])
+            ','.join(track.spotify_id for track in context['tracks'])
         )
         return context
 

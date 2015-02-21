@@ -8,7 +8,7 @@ import spotipy
 CLIENT_CREDENTIALS_CACHE_KEY='spotify_client_credentials'
 CLIENT_CREDENTIALS_URL='https://accounts.spotify.com/api/token'
 
-TrackResult = namedtuple('TrackResult', 'uri album_match available_markets')
+TrackResult = namedtuple('TrackResult', 'id album_match available_markets')
 
 def spotify():
     return spotipy.Spotify(auth=client_credentials_token())
@@ -37,7 +37,7 @@ def fetch_new_client_credentials_token():
 
 def find_track(track, artist=None, album=None, country_code=None):
     """
-    Find a spotify track uri for the single best-matching track.
+    Find a spotify track id for the single best-matching track.
 
     TrackResult.album_match is True if the track was found on the requested album
 
@@ -81,7 +81,7 @@ def find_track(track, artist=None, album=None, country_code=None):
     if results['tracks']['total'] >= 1:
         for item in results['tracks']['items']:
             if artist_match(artist, item['artists']) and track_match(track, item['name']):
-                result = TrackResult(item['uri'], album_match(album, item['album']), item['available_markets'])
+                result = TrackResult(item['id'], album_match(album, item['album']), item['available_markets'])
                 if result.album_match:
                     return result
                 else:

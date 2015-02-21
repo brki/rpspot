@@ -28,7 +28,7 @@ class SearchTrack(TestCase):
         result = find_track(
             artist='Shriekback', track='All Lined Up', album='Natural History', country_code='CH')
         self.assertIsNotNone(result)
-        self.assertIsNotNone(result.uri)
+        self.assertIsNotNone(result.id)
         self.assertFalse(result.album_match)
         self.assertIn('CH', result.available_markets)
 

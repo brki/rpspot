@@ -10,7 +10,7 @@ import unicodedata
 
 log = logging.getLogger(__name__)
 
-AlbumInfo = namedtuple('AlbumInfo', 'uri title img_small img_medium img_large exact_match')
+AlbumInfo = namedtuple('AlbumInfo', 'id title img_small img_medium img_large exact_match')
 
 class ArtistNotFoundError(Exception):
     pass
@@ -53,6 +53,8 @@ class TrackSearch(object):
         perfect_matches = {}
         almost_matches = {}
         for item in results:
+            #TODO: refactor this.  Check the artist and track title match exactly before creating artist / album / track records
+            #                      The exception being handled in extract_*_info is not really nice and obvious.
             try:
                 track = self.get_or_create_track(item, track_title, artist_name, album_title)
                 perfect_match = self.is_perfect_match(track, track_title, artist_name, album_title)
@@ -140,7 +142,7 @@ class TrackSearch(object):
 
         :param artist:
         :param artist_list:
-        :return: type (artist_name, spotify_uri)
+        :return: type (artist_name, spotify_artist_id)
         """
         artist_simple = self.simplified_text(artist)
         artist_alternate = 'the' + artist_simple
@@ -150,7 +152,7 @@ class TrackSearch(object):
             a_alternate = 'the' + a_simple
             if len({artist_simple, artist_alternate, a_simple, a_alternate}) < 4:
                 # At least one of the pairs matched.
-                return a['name'], a['uri'], multiple
+                return a['name'], a['id'], multiple
         else:
             message = "Artist '{}' not found in list: {}".format(
                 artist, [a['name'] for a in artist_list]
@@ -178,7 +180,7 @@ class TrackSearch(object):
             img_med = images[-2]['url']
             img_large = images[-1]['url']
         return AlbumInfo(
-            uri=album['uri'], title=album['name'],
+            id=album['id'], title=album['name'],
             img_small=img_small, img_medium=img_med, img_large=img_large,
             exact_match=exact_match
         )
@@ -193,16 +195,26 @@ class TrackSearch(object):
             regex = r"^" + song_simple + r"(\d{4})?((digital)?(remaster(ed)?))?"
             song_match = re.match(regex, item_song_simple)
         if song_match:
-            return item['uri'], item['name']
+            return item['id'], item['name']
         else:
             message = "Expected track: {}, found track: {}".format(song, item['name'])
             log.debug(message)
             raise SongNotFoundError(message)
 
     def get_or_create_track(self, item, song, artist, album):
-        artist_name, artist_uri, many_artists = self.extract_artist_info(artist, item['artists'])
+        """
+        Gets or creates the track, also getting or creating the artist and album.
+
+        In case the song or artist don't match exactly, an exception is raised.
+        :param item:
+        :param song:
+        :param artist:
+        :param album:
+        :return:
+        """
+        artist_name, artist_id, many_artists = self.extract_artist_info(artist, item['artists'])
         album_info = self.extract_album_info(album, item)
-        uri, title = self.extract_track_info(song, item)
+        id, title = self.extract_track_info(song, item)
 
         album_defaults = {
             'title': album_info.title,
@@ -210,16 +222,16 @@ class TrackSearch(object):
             'img_medium_url': album_info.img_medium,
             'img_large_url': album_info.img_large,
         }
-        album_obj = self.get_or_create_and_update_if_needed(Album, {'uri': album_info.uri}, album_defaults)
+        album_obj = self.get_or_create_and_update_if_needed(Album, {'spotify_id': album_info.id}, album_defaults)
 
         track_defaults = {
             'title': title,
             'album': album_obj,
             'artist': artist_name,
-            'artist_uri': artist_uri,
+            'artist_id': artist_id,
             'many_artists': many_artists,
         }
-        track_obj = self.get_or_create_and_update_if_needed(Track, {'uri': uri}, track_defaults)
+        track_obj = self.get_or_create_and_update_if_needed(Track, {'spotify_id': id}, track_defaults)
         return track_obj
 
     def get_or_create_and_update_if_needed(self, model, kwargs, defaults):

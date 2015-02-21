@@ -3,7 +3,7 @@ from rphistory.models import Song, History
 
 
 class Album(models.Model):
-    uri = models.CharField(max_length=120, unique=True, help_text="A spotify album uri")
+    spotify_id = models.CharField(max_length=120, unique=True, help_text="A spotify album id")
     title = models.CharField(max_length=255, blank=False, help_text="Album title")
     img_small_url = models.URLField(null=True)
     img_medium_url = models.URLField(null=True)
@@ -23,7 +23,7 @@ class TrackManager(models.Manager):
             date_clause = ''
 
         sql = '''
-            SELECT t.id, replace(t.uri, 'spotify:track:', '') AS uri, t.title, t.artist,
+            SELECT t.id, t.spotify_id, t.title, t.artist,
                    a.title AS album_title, a.img_small_url, h.played_at
               FROM {track} t
               JOIN {album} a ON t.album_id = a.id
@@ -48,12 +48,13 @@ class TrackManager(models.Manager):
             qs.reverse()
         return qs
 
+
 class Track(models.Model):
-    uri = models.CharField(max_length=120, help_text="A spotify track uri", unique=True)
+    spotify_id = models.CharField(max_length=120, help_text="A spotify track id", unique=True)
     title = models.CharField(max_length=255, blank=False, help_text="Track title")
     album = models.ForeignKey(Album)
     artist = models.CharField(max_length=255, blank=False, help_text="Primary artist name")
-    artist_uri = models.CharField(max_length=120, help_text="A spotify artist uri")
+    artist_id = models.CharField(max_length=120, help_text="A spotify artist id")
     many_artists = models.BooleanField(default=False)
     objects = TrackManager()
 
@@ -64,7 +65,7 @@ class TrackAvailability(models.Model):
     country = models.CharField(max_length=2)
 
     class Meta:
-        unique_together = (('track', 'rp_song', 'country'))
+        unique_together = (('track', 'rp_song', 'country'),)
 
 
 class TrackSearchHistory(models.Model):
