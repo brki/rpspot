@@ -8,18 +8,18 @@ from spotify.spotify import spotify
 from trackmap.models import Album, Track, TrackAvailability
 import unicodedata
 
-log = logging.getLogger(__name__)
 
 AlbumInfo = namedtuple('AlbumInfo', 'id title img_small img_medium img_large exact_match')
+ArtistInfo = namedtuple('ArtistInfo', 'id name multiple')
+TrackInfo = namedtuple('ArtistInfo', 'id title')
 
-class ArtistNotFoundError(Exception):
-    pass
 
-class SongNotFoundError(Exception):
-    pass
+log = logging.getLogger(__name__)
+
 
 def utc_now():
     return timezone.now().replace(tzinfo=timezone.utc)
+
 
 def remove_accents(input_str):
     nkfd_form = unicodedata.normalize('NFKD', input_str)
@@ -54,19 +54,24 @@ class TrackSearch(object):
         perfect_matches = {}
         almost_matches = {}
         for item in results:
-            #TODO: refactor this.  Check the artist and track title match exactly before creating artist / album / track records
-            #                      The exception being handled in extract_*_info is not really nice and obvious.
-            try:
-                track = self.get_or_create_track(item, track_title, artist_name, album_title)
-                perfect_match = self.is_perfect_match(track, track_title, artist_name, album_title)
-                matches = perfect_matches if perfect_match else almost_matches
-                for country in item['available_markets']:
-                    if not country in matches:
-                        availability = TrackAvailability(track=track, rp_song=song, country=country)
-                        availability.full_clean(validate_unique=False)
-                        matches[country] = availability
-            except(SongNotFoundError, ArtistNotFoundError):
-                pass
+            track_info = self.extract_track_info(track_title, item)
+            artist_info = self.extract_artist_info(artist_name, item['artists'])
+            album_info = self.extract_album_info(album_title, item)
+            if track_info is None or artist_info is None:
+                # If the artist or track was not found, no need to process this item.
+                continue
+
+            track = self.get_or_create_track(track_info, artist_info, album_info)
+
+            perfect_match = self.is_perfect_match(
+                track_title, artist_name, album_title, track_info, artist_info, album_info)
+
+            matches = perfect_matches if perfect_match else almost_matches
+            for country in item['available_markets']:
+                if not country in matches:
+                    availability = TrackAvailability(track=track, rp_song=song, country=country)
+                    availability.full_clean(validate_unique=False)
+                    matches[country] = availability
 
         return perfect_matches, almost_matches
 
@@ -102,7 +107,7 @@ class TrackSearch(object):
 
     def get_query_results(self, query, limit=None, max_items=None):
         """
-        Gets as many query results as specified; handles Spotifies paging API.
+        Gets as many query results as specified; handles Spotify's paging API.
 
         Note that max_items is not strict, all results from each page of results are added.
         E.g. with limit=5, max_items=7, you will get two full pages of results (10 items) if there are
@@ -128,6 +133,8 @@ class TrackSearch(object):
                 total += count
                 offset += count
             keep_going = results['tracks']['next'] and total < max_items
+            if total > max_items:
+                log.warn("The query '{}' returned more than max_items={} results!".format(query, max_items))
         return all_items
 
     def simplified_text(self, string):
@@ -136,14 +143,14 @@ class TrackSearch(object):
 
     def extract_artist_info(self, artist, artist_list):
         """
-        Find a matching artist, or raise ArtistNotFoundError.
+        Find a matching artist. There may be many artists, but we don't care, we just search for ``artist``.
 
         Spotify's search api doesn't allow for requiring exact matches, so we try here to do a reasonably
         good job of detecting a matching artist name.
 
-        :param artist:
-        :param artist_list:
-        :return: type (artist_name, spotify_artist_id)
+        :param artist: string
+        :param artist_list: array of spotify API album results
+        :return: ArtistInfo
         """
         artist_simple = self.simplified_text(artist)
         artist_alternate = 'the' + artist_simple
@@ -153,13 +160,13 @@ class TrackSearch(object):
             a_alternate = 'the' + a_simple
             if len({artist_simple, artist_alternate, a_simple, a_alternate}) < 4:
                 # At least one of the pairs matched.
-                return a['name'], a['id'], multiple
+                return ArtistInfo(id=a['id'], name=a['name'], multiple=multiple)
         else:
             message = "Artist '{}' not found in list: {}".format(
                 artist, [a['name'] for a in artist_list]
             )
             log.debug(message)
-            raise ArtistNotFoundError(message)
+        return None
 
     def extract_album_info(self, expected_album, item):
         album = item['album']
@@ -186,53 +193,47 @@ class TrackSearch(object):
             exact_match=exact_match
         )
 
-    def extract_track_info(self, song, item):
-        song_simple = self.simplified_text(song)
-        item_song_simple = self.simplified_text(item['name'])
+    def extract_track_info(self, track_title, item):
+        track_simple = self.simplified_text(track_title)
+        item_track_simple = self.simplified_text(item['name'])
 
-        song_match = song_simple == item_song_simple
-        if not song_match:
+        track_match = track_simple == item_track_simple
+        if not track_match:
             # Accept things like "song name 2004 remaster":
-            regex = r"^" + song_simple + r"(\d{4})?((digital)?(remaster(ed)?))?"
-            song_match = re.match(regex, item_song_simple)
-        if song_match:
-            return item['id'], item['name']
+            regex = r"^" + track_simple + r"(\d{4})?((digital)?(remaster(ed)?))?"
+            song_match = re.match(regex, item_track_simple)
+        if track_match:
+            return TrackInfo(id=item['id'], title=item['name'])
         else:
-            message = "Expected track: {}, found track: {}".format(song, item['name'])
+            message = "Expected track: {}, found track: {}".format(track_title, item['name'])
             log.debug(message)
-            raise SongNotFoundError(message)
+        return None
 
-    def get_or_create_track(self, item, song, artist, album):
+    def get_or_create_track(self, track_info, artist_info, album_info):
         """
-        Gets or creates the track, also getting or creating the artist and album.
+        Gets or creates the track, also getting or creating the album.
 
-        In case the song or artist don't match exactly, an exception is raised.
-        :param item:
-        :param song:
-        :param artist:
-        :param album:
-        :return:
+        :param TrackInfo track_info:
+        :param ArtistInfo artist_info:
+        :param AlbumInfo album_info:
+        :return: Track
         """
-        artist_name, artist_id, many_artists = self.extract_artist_info(artist, item['artists'])
-        album_info = self.extract_album_info(album, item)
-        id, title = self.extract_track_info(song, item)
-
         album_defaults = {
             'title': album_info.title,
             'img_small_url': album_info.img_small,
             'img_medium_url': album_info.img_medium,
             'img_large_url': album_info.img_large,
-        }
+            }
         album_obj = self.get_or_create_and_update_if_needed(Album, {'spotify_id': album_info.id}, album_defaults)
 
         track_defaults = {
-            'title': title,
+            'title': track_info.title,
             'album': album_obj,
-            'artist': artist_name,
-            'artist_id': artist_id,
-            'many_artists': many_artists,
-        }
-        track_obj = self.get_or_create_and_update_if_needed(Track, {'spotify_id': id}, track_defaults)
+            'artist': artist_info.name,
+            'artist_id': artist_info.id,
+            'many_artists': artist_info.multiple,
+            }
+        track_obj = self.get_or_create_and_update_if_needed(Track, {'spotify_id': track_info.id}, track_defaults)
         return track_obj
 
     def get_or_create_and_update_if_needed(self, model, kwargs, defaults):
@@ -261,19 +262,21 @@ class TrackSearch(object):
                 obj.full_clean(exclude=clean_exclude, validate_unique=False)
         return obj
 
-    def is_perfect_match(self, track, track_title, artist_name, album_title):
+    def is_perfect_match(self, track_title, artist_name, album_title, track_info, artist_info, album_info):
         """
         Checks if it is a perfect match, or if one or more of the attributes don't match.
 
-        :param track: Track object
-        :param track_title:
-        :param artist_name:
-        :param album_title:
+        :param string track_title:
+        :param string artist_name:
+        :param string album_title:
+        :param TrackInfo track_info:
+        :param ArtistInfo artist_info:
+        :param AlbumInfo album_info:
         :return: boolean
         """
-        return (track.title.lower() == track_title.lower()
-                and track.artist.lower() == artist_name.lower()
-                and track.album.title.lower() == album_title.lower()
+        return (track_info.title.lower() == track_title.lower()
+                and album_info.title.lower() == album_title.lower()
+                and artist_info.name.lower() == artist_name.lower()
         )
 
     def map_artist_name(self, artist_name):
