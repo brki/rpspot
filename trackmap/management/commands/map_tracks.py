@@ -30,7 +30,8 @@ class Command(BaseCommand):
             log.debug("Processing %s - %s", artist_name, song.title)
             matches = track_search.get_market_track_availability(song, song.title, artist_name, song.album.title)
             if matches:
-                track_search.update_db_with_availibility(song, matches.values())
+                track_availabilities = track_search.create_market_tracks(song, matches)
+                track_search.update_db_with_availibility(song, track_availabilities)
                 found = True
                 found_count += 1
             else:

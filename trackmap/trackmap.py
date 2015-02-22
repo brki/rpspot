@@ -12,6 +12,7 @@ import unicodedata
 AlbumInfo = namedtuple('AlbumInfo', 'id title img_small img_medium img_large exact_match')
 ArtistInfo = namedtuple('ArtistInfo', 'id name multiple')
 TrackInfo = namedtuple('ArtistInfo', 'id title')
+TrackArtistAlbum = namedtuple('TrackArtistAlbum', 'track_info artist_info album_info')
 
 
 log = logging.getLogger(__name__)
@@ -61,17 +62,36 @@ class TrackSearch(object):
                 # If the artist or track was not found, no need to process this item.
                 continue
 
-            track = self.get_or_create_track(track_info, artist_info, album_info)
             score = self.match_score(track_title, artist_name, album_title, track_info, artist_info, album_info)
             for country in item['available_markets']:
-                previous_score = matches_score.get(country, 0)
+                previous_score = matches_score.get(country, -1)
                 matches_score[country] = score
                 if score > previous_score:
-                    track_availability = TrackAvailability(track=track, rp_song=song, country=country)
-                    track_availability.full_clean(validate_unique=False)
-                    best_matches[country] = track_availability
-
+                    best_matches[country] = TrackArtistAlbum(
+                        track_info=track_info, artist_info=artist_info, album_info=album_info
+                    )
         return best_matches
+
+    def create_market_tracks(self, song, market_tracks):
+        """
+
+        :param song: rphistory.Song object
+        :param country_tracks: map of country name string => TrackArtistAlbum namedtumple
+        :return: list of TrackAvailability objects
+        """
+        availabilities = []
+        track_cache = {}
+        for country, info in market_tracks.items():
+            spotify_id = info.track_info.id
+            try:
+                track = track_cache[spotify_id]
+            except KeyError:
+                track = self.get_or_create_track(info.track_info, info.artist_info, info.album_info)
+                track_cache[spotify_id] = track
+            track_availability = TrackAvailability(track=track, rp_song=song, country=country)
+            track_availability.full_clean(validate_unique=False)
+            availabilities.append(track_availability)
+        return availabilities
 
     @transaction.atomic
     def update_db_with_availibility(self, song, track_availabilities):
@@ -262,6 +282,8 @@ class TrackSearch(object):
     def match_score(self, track_title, artist_name, album_title, track_info, artist_info, album_info):
         """
         Determines a score for the match; the more items that match, the higher the score is.
+
+        The lowest score possible is 0, the highest possible is (currently) 3.
 
         :param string track_title:
         :param string artist_name:
