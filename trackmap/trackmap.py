@@ -35,8 +35,8 @@ class TrackSearch(object):
 
     def __init__(self, query_limit=40, max_items_to_process=200):
         self.spotify = spotify()
-        self.query_limit=query_limit
-        self.max_items_to_process=max_items_to_process
+        self.query_limit = query_limit
+        self.max_items_to_process = max_items_to_process
         self.strip_non_words_pattern = re.compile('[\W_]+', re.UNICODE)
 
     def get_market_track_availability(self, song, track_title, artist_name, album_title):
@@ -71,7 +71,7 @@ class TrackSearch(object):
 
             matches = perfect_matches if perfect_match else almost_matches
             for country in item['available_markets']:
-                if not country in matches:
+                if country not in matches:
                     availability = TrackAvailability(track=track, rp_song=song, country=country)
                     availability.full_clean(validate_unique=False)
                     matches[country] = availability
@@ -106,7 +106,6 @@ class TrackSearch(object):
         if album_title:
             q.append('album:"{}"'.format(album_title))
         return ' '.join(q)
-
 
     def get_query_results(self, query, limit=None, max_items=None):
         """
@@ -204,7 +203,7 @@ class TrackSearch(object):
         if not track_match:
             # Accept things like "song name 2004 remaster":
             regex = r"^" + track_simple + r"(\d{4})?((digital)?(remaster(ed)?))?"
-            song_match = re.match(regex, item_track_simple)
+            track_match = re.match(regex, item_track_simple)
         if track_match:
             return TrackInfo(id=item['id'], title=item['name'])
         else:
@@ -277,9 +276,10 @@ class TrackSearch(object):
         :param AlbumInfo album_info:
         :return: boolean
         """
-        return (track_info.title.lower() == track_title.lower()
-                and album_info.title.lower() == album_title.lower()
-                and artist_info.name.lower() == artist_name.lower()
+        return (
+            track_info.title.lower() == track_title.lower()
+            and album_info.title.lower() == album_title.lower()
+            and artist_info.name.lower() == artist_name.lower()
         )
 
     def map_artist_name(self, artist_name):
@@ -290,4 +290,3 @@ class TrackSearch(object):
         """
         #TODO: should these be managed in the DB?
         return self.rp_to_spotify_artist_map.get(artist_name, artist_name)
-
