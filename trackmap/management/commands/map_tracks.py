@@ -1,11 +1,9 @@
-import datetime
-from django.core.management.base import BaseCommand, CommandError
-from django.db.models import Q
-from django.utils import timezone
-from rphistory.models import History, Song, Album, Artist
-from trackmap.models import Track, TrackAvailability, TrackSearchHistory
+from django.core.management.base import BaseCommand
+from rphistory.models import Song
+from trackmap.models import TrackSearchHistory
 from trackmap.trackmap import TrackSearch, utc_now
 from logging import getLogger
+
 
 log = getLogger(__name__)
 
