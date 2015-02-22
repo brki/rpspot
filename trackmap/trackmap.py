@@ -63,6 +63,9 @@ class TrackSearch(object):
 
             track = self.get_or_create_track(track_info, artist_info, album_info)
 
+            #TODO: Base this on a score, not a boolean (e.g. if track and artist but not album match perfectly, score=2)
+            #      Replace items in almost_matches if score is higher than previous entry.
+
             perfect_match = self.is_perfect_match(
                 track_title, artist_name, album_title, track_info, artist_info, album_info)
 
