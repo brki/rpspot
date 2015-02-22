@@ -28,10 +28,7 @@ class Command(BaseCommand):
         for song in new_songs:
             artist_name = track_search.map_artist_name(song.artist.name)
             log.debug("Processing %s - %s", artist_name, song.title)
-            perfect_matches, matches = track_search.get_market_track_availability(
-                song, song.title, artist_name, song.album.title)
-            # Prefer perfect matches.
-            matches.update(perfect_matches)
+            matches = track_search.get_market_track_availability(song, song.title, artist_name, song.album.title)
             if matches:
                 track_search.update_db_with_availibility(song, matches.values())
                 found = True

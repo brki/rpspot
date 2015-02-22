@@ -51,8 +51,8 @@ class TrackSearch(object):
         """
         query = self.build_query(track_title, artist_name=artist_name)
         results = self.get_query_results(query)
-        perfect_matches = {}
-        almost_matches = {}
+        best_matches = {}
+        matches_score = {}
         for item in results:
             track_info = self.extract_track_info(track_title, item)
             artist_info = self.extract_artist_info(artist_name, item['artists'])
@@ -62,21 +62,16 @@ class TrackSearch(object):
                 continue
 
             track = self.get_or_create_track(track_info, artist_info, album_info)
-
-            #TODO: Base this on a score, not a boolean (e.g. if track and artist but not album match perfectly, score=2)
-            #      Replace items in almost_matches if score is higher than previous entry.
-
-            perfect_match = self.is_perfect_match(
-                track_title, artist_name, album_title, track_info, artist_info, album_info)
-
-            matches = perfect_matches if perfect_match else almost_matches
+            score = self.match_score(track_title, artist_name, album_title, track_info, artist_info, album_info)
             for country in item['available_markets']:
-                if country not in matches:
-                    availability = TrackAvailability(track=track, rp_song=song, country=country)
-                    availability.full_clean(validate_unique=False)
-                    matches[country] = availability
+                previous_score = matches_score.get(country, 0)
+                matches_score[country] = score
+                if score > previous_score:
+                    track_availability = TrackAvailability(track=track, rp_song=song, country=country)
+                    track_availability.full_clean(validate_unique=False)
+                    best_matches[country] = track_availability
 
-        return perfect_matches, almost_matches
+        return best_matches
 
     @transaction.atomic
     def update_db_with_availibility(self, song, track_availabilities):
@@ -264,9 +259,9 @@ class TrackSearch(object):
                 obj.full_clean(exclude=clean_exclude, validate_unique=False)
         return obj
 
-    def is_perfect_match(self, track_title, artist_name, album_title, track_info, artist_info, album_info):
+    def match_score(self, track_title, artist_name, album_title, track_info, artist_info, album_info):
         """
-        Checks if it is a perfect match, or if one or more of the attributes don't match.
+        Determines a score for the match; the more items that match, the higher the score is.
 
         :param string track_title:
         :param string artist_name:
@@ -274,13 +269,14 @@ class TrackSearch(object):
         :param TrackInfo track_info:
         :param ArtistInfo artist_info:
         :param AlbumInfo album_info:
-        :return: boolean
+        :return: int
         """
-        return (
-            track_info.title.lower() == track_title.lower()
-            and album_info.title.lower() == album_title.lower()
-            and artist_info.name.lower() == artist_name.lower()
+        score = (
+            int(track_info.title.lower() == track_title.lower())
+            + int(album_info.title.lower() == album_title.lower())
+            + int(artist_info.name.lower() == artist_name.lower())
         )
+        return score
 
     def map_artist_name(self, artist_name):
         """
