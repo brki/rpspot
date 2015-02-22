@@ -13,12 +13,19 @@ log = getLogger(__name__)
 class Command(BaseCommand):
     help = 'Maps new Radio Paradise playlist songs to Spotify tracks'
 
-    #TODO: add a parameter to allow limiting the number of songs to process
+    def add_arguments(self, parser):
+        parser.add_argument('limit', nargs='?', type=int, default=0,
+                            help='Only process <limit> new Radio Paradise songs')
+
     def handle(self, *args, **options):
+
+        limit = options['limit']
+        new_songs = Song.objects.filter(search_history__isnull=True).select_related('album', 'artist')
+        if limit:
+            new_songs = new_songs[:limit]
 
         now = utc_now()
         track_search = TrackSearch()
-        new_songs = Song.objects.filter(search_history__isnull=True).select_related('album', 'artist')
         found_count = 0
         for song in new_songs:
             artist_name = track_search.map_artist_name(song.artist.name)
