@@ -16,7 +16,7 @@ class TrackManager(models.Manager):
         params = {'country': country, 'limit': limit}
         if start_time:
             order_direction = 'ASC'
-            date_clause = 'AND h.played at >= %(start_time)s'
+            date_clause = 'AND h.played_at >= %(start_time)s'
             params['start_time'] = start_time
         else:
             order_direction = 'DESC'

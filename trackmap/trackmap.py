@@ -3,15 +3,16 @@ import logging
 import re
 from operator import itemgetter
 from django.db import transaction
+from django.db.utils import IntegrityError
 from django.utils import timezone
 from spotify.spotify import spotify
 from trackmap.models import Album, Track, TrackAvailability
 import unicodedata
 
 
-AlbumInfo = namedtuple('AlbumInfo', 'id title img_small img_medium img_large exact_match')
-ArtistInfo = namedtuple('ArtistInfo', 'id name multiple')
-TrackInfo = namedtuple('ArtistInfo', 'id title')
+AlbumInfo = namedtuple('AlbumInfo', 'id title year img_small img_medium img_large match_score')
+ArtistInfo = namedtuple('ArtistInfo', 'id name multiple match_score')
+TrackInfo = namedtuple('ArtistInfo', 'id title match_score')
 TrackArtistAlbum = namedtuple('TrackArtistAlbum', 'track_info artist_info album_info')
 
 
@@ -26,6 +27,15 @@ def remove_accents(input_str):
     nkfd_form = unicodedata.normalize('NFKD', input_str)
     return "".join([c for c in nkfd_form if not unicodedata.combining(c)])
 
+def chunks(l, n):
+    """
+    Breaks a single list into several lists of size n.
+    :param list l: list to break into chunks
+    :param int n: number of elements that each chunk should have
+    :return: list of lists
+    """
+    n = max(1, n)
+    return [l[i:i + n] for i in range(0, len(l), n)]
 
 class TrackSearch(object):
 
@@ -40,7 +50,7 @@ class TrackSearch(object):
         self.max_items_to_process = max_items_to_process
         self.strip_non_words_pattern = re.compile('[\W_]+', re.UNICODE)
 
-    def get_market_track_availability(self, song, track_title, artist_name, album_title):
+    def find_matching_tracks(self, song):
         """
         Gets the matching tracks that can be played per country.
 
@@ -48,32 +58,36 @@ class TrackSearch(object):
         :param track_title: title to search
         :param artist_name: artist to search
         :param album_title: album to search
+        :param album_year: album release year to search
         :return: tuple: perfect_matches_dict, almost_matches_dict
         """
-        query = self.build_query(track_title, artist_name=artist_name)
+        query = self.build_query(song.title, artist_name=song.artist.name)
         results = self.get_query_results(query)
+        self.add_full_album_info(results)
         best_matches = {}
         matches_score = {}
+        artist_name = self.map_artist_name(song.artist.name)
         for item in results:
-            track_info = self.extract_track_info(track_title, item)
+            track_info = self.extract_track_info(song.title, item)
             artist_info = self.extract_artist_info(artist_name, item['artists'])
-            album_info = self.extract_album_info(album_title, item)
+            album_info = self.extract_album_info(song.album.title, song.album.release_year, item)
             if track_info is None or artist_info is None:
                 # If the artist or track was not found, no need to process this item.
                 continue
 
-            score = self.match_score(track_title, artist_name, album_title, track_info, artist_info, album_info)
+            score = sum(info.match_score for info in [track_info, artist_info, album_info])
             for country in item['available_markets']:
                 previous_score = matches_score.get(country, -1)
-                matches_score[country] = score
                 if score > previous_score:
+                    matches_score[country] = score
                     best_matches[country] = TrackArtistAlbum(
                         track_info=track_info, artist_info=artist_info, album_info=album_info
                     )
         return best_matches
 
-    def create_market_tracks(self, song, market_tracks):
+    def create_tracks(self, song, market_tracks):
         """
+        Create the tracks and artist objects, and collects the per-market TrackAvailability objects.
 
         :param song: rphistory.Song object
         :param country_tracks: map of country name string => TrackArtistAlbum namedtumple
@@ -83,11 +97,14 @@ class TrackSearch(object):
         track_cache = {}
         for country, info in market_tracks.items():
             spotify_id = info.track_info.id
-            try:
-                track = track_cache[spotify_id]
-            except KeyError:
-                track = self.get_or_create_track(info.track_info, info.artist_info, info.album_info)
-                track_cache[spotify_id] = track
+            track = track_cache.get(spotify_id, None)
+            if not track:
+                try:
+                    track = self.get_or_create_track(info.track_info, info.artist_info, info.album_info)
+                    track_cache[spotify_id] = track
+                except IntegrityError as e:
+                    log.warn("Problem creating track for rp song {}: {}".format(song.rp_song_id, e))
+                    continue
             track_availability = TrackAvailability(track=track, rp_song=song, country=country)
             track_availability.full_clean(validate_unique=False)
             availabilities.append(track_availability)
@@ -154,6 +171,30 @@ class TrackSearch(object):
                 log.warn("The query '{}' returned more than max_items={} results!".format(query, max_items))
         return all_items
 
+    def add_full_album_info(self, items):
+        """
+        Adds full album info for the retrieved results, and adds a ``release_year`` element to the full album info.
+
+        Modifies passed items.
+
+        :param items: track query result items
+        :return: None
+        """
+        # Spotify limits getting multiple albums in one query to 20 albums.
+        max_ids = 20
+
+        album_ids = {item['album']['id'] for item in items}
+        id_lists = chunks(list(album_ids), max_ids)
+
+        album_info = {}
+        for id_list in id_lists:
+            for album in self.spotify.albums(id_list)['albums']:
+                album['release_year'] = album['release_date'].split('-')[0]
+                album_info[album['id']] = album
+
+        for item in items:
+            item['album'] = album_info[item['album']['id']]
+
     def simplified_text(self, string):
         string = string.lower().replace(' & ', ' and ').replace(' + ', ' and ')
         return remove_accents(self.strip_non_words_pattern.sub('', string))
@@ -177,7 +218,8 @@ class TrackSearch(object):
             a_alternate = 'the' + a_simple
             if len({artist_simple, artist_alternate, a_simple, a_alternate}) < 4:
                 # At least one of the pairs matched.
-                return ArtistInfo(id=a['id'], name=a['name'], multiple=multiple)
+                match_score = int(artist_simple == a_simple)
+                return ArtistInfo(id=a['id'], name=a['name'], multiple=multiple, match_score=match_score)
         else:
             message = "Artist '{}' not found in list: {}".format(
                 artist, [a['name'] for a in artist_list]
@@ -185,11 +227,12 @@ class TrackSearch(object):
             log.debug(message)
         return None
 
-    def extract_album_info(self, expected_album, item):
+    def extract_album_info(self, expected_album, expected_year, item):
         album = item['album']
         expected_simple = self.simplified_text(expected_album)
         item_simple = self.simplified_text(album['name'])
-        exact_match = expected_simple == item_simple
+        item_year = int(album['release_year'])
+        match_score = int(item_simple == expected_simple) + int(expected_year == item_year)
         img_small = None
         img_med = None
         img_large = None
@@ -205,9 +248,9 @@ class TrackSearch(object):
             img_med = images[-2]['url']
             img_large = images[-1]['url']
         return AlbumInfo(
-            id=album['id'], title=album['name'],
+            id=album['id'], title=album['name'], year=item_year,
             img_small=img_small, img_medium=img_med, img_large=img_large,
-            exact_match=exact_match
+            match_score=match_score
         )
 
     def extract_track_info(self, track_title, item):
@@ -220,12 +263,13 @@ class TrackSearch(object):
             regex = r"^" + track_simple + r"(\d{4})?((digital)?(remaster(ed)?))?"
             track_match = re.match(regex, item_track_simple)
         if track_match:
-            return TrackInfo(id=item['id'], title=item['name'])
+            return TrackInfo(id=item['id'], title=item['name'], match_score=1)
         else:
             message = "Expected track: {}, found track: {}".format(track_title, item['name'])
             log.debug(message)
         return None
 
+    @transaction.atomic
     def get_or_create_track(self, track_info, artist_info, album_info):
         """
         Gets or creates the track, also getting or creating the album.
@@ -278,27 +322,6 @@ class TrackSearch(object):
             if changed:
                 obj.full_clean(exclude=clean_exclude, validate_unique=False)
         return obj
-
-    def match_score(self, track_title, artist_name, album_title, track_info, artist_info, album_info):
-        """
-        Determines a score for the match; the more items that match, the higher the score is.
-
-        The lowest score possible is 0, the highest possible is (currently) 3.
-
-        :param string track_title:
-        :param string artist_name:
-        :param string album_title:
-        :param TrackInfo track_info:
-        :param ArtistInfo artist_info:
-        :param AlbumInfo album_info:
-        :return: int
-        """
-        score = (
-            int(track_info.title.lower() == track_title.lower())
-            + int(album_info.title.lower() == album_title.lower())
-            + int(artist_info.name.lower() == artist_name.lower())
-        )
-        return score
 
     def map_artist_name(self, artist_name):
         """

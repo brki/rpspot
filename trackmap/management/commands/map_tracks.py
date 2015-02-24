@@ -26,11 +26,10 @@ class Command(BaseCommand):
         track_search = TrackSearch()
         found_count = 0
         for song in new_songs:
-            artist_name = track_search.map_artist_name(song.artist.name)
-            log.debug("Processing %s - %s", artist_name, song.title)
-            matches = track_search.get_market_track_availability(song, song.title, artist_name, song.album.title)
+            log.debug("Processing %s - %s", song.artist.name, song.title)
+            matches = track_search.find_matching_tracks(song)
             if matches:
-                track_availabilities = track_search.create_market_tracks(song, matches)
+                track_availabilities = track_search.create_tracks(song, matches)
                 track_search.update_db_with_availibility(song, track_availabilities)
                 found = True
                 found_count += 1

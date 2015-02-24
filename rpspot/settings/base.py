@@ -138,7 +138,12 @@ LOGGING = {
         #     'level': 'DEBUG' if DEBUG else 'ERROR',
         #     'propagate': True
         # },
-        'trackmap.trackmap': {
+        'trackmap': {
+            'handlers': ['console'],
+            'level': 'DEBUG' if DEBUG else 'ERROR',
+            'propagate': True
+        },
+        'rphistory': {
             'handlers': ['console'],
             'level': 'DEBUG' if DEBUG else 'ERROR',
             'propagate': True

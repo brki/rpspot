@@ -8,5 +8,5 @@ urlpatterns = [
     # url(r'^blog/', include('blog.urls')),
 
     url(r'^admin/', include(admin.site.urls)),
-    url(r'^$', PlaylistView.as_view(), name='playlists')
+    url(r'^spotify-playlist/radio-paradise/$', PlaylistView.as_view(), name='playlists')
 ]
