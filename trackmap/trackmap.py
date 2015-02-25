@@ -1,13 +1,15 @@
 from collections import namedtuple
 import logging
-import re
 from operator import itemgetter
+import re
+import unicodedata
+
 from django.db import transaction
 from django.db.utils import IntegrityError
 from django.utils import timezone
+
 from spotify.spotify import spotify
 from trackmap.models import Album, Track, TrackAvailability
-import unicodedata
 
 
 AlbumInfo = namedtuple('AlbumInfo', 'id title year img_small img_medium img_large match_score')
@@ -27,6 +29,7 @@ def remove_accents(input_str):
     nkfd_form = unicodedata.normalize('NFKD', input_str)
     return "".join([c for c in nkfd_form if not unicodedata.combining(c)])
 
+
 def chunks(l, n):
     """
     Breaks a single list into several lists of size n.
@@ -36,6 +39,7 @@ def chunks(l, n):
     """
     n = max(1, n)
     return [l[i:i + n] for i in range(0, len(l), n)]
+
 
 class TrackSearch(object):
 
