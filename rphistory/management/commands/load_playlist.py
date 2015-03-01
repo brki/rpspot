@@ -29,7 +29,9 @@ class Command(BaseCommand):
             min_time = None
 
         latest_playlist = get_playlist_from_url(url)
-        songs = playlist_to_python(latest_playlist, min_time=min_time)
-        loaded = save_songs_and_history(songs)
-
-        self.stdout.write("Loaded {}/{} new song play histories".format(loaded, len(songs)))
+        if latest_playlist:
+            songs = playlist_to_python(latest_playlist, min_time=min_time)
+            loaded = save_songs_and_history(songs)
+            self.stdout.write("Loaded {}/{} new song play histories".format(loaded, len(songs)))
+        else:
+            self.stdout.write("Playlist file unchanged, nothing to do.")

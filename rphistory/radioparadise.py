@@ -3,17 +3,18 @@ from datetime import datetime
 from logging import getLogger
 from pytz import utc
 from socket import timeout
-from urllib.request import urlopen
+from urllib.request import Request, urlopen
 from urllib.error import HTTPError, URLError
 from xml.etree import ElementTree
 
+from django.core.cache import caches
 from django.db import transaction
 from django.db.utils import IntegrityError
 
 from bs4 import BeautifulSoup
 
 from rphistory.models import History, Song, Album, Artist
-from .settings import RP_PLAYLIST_URL
+from .settings import RP_PLAYLIST_URL, RP_CACHE
 
 
 # AsinInfo fields:
@@ -33,6 +34,10 @@ SongInfo = namedtuple('SongInfo', 'time id title artist album album_asin album_r
 
 
 log = getLogger(__name__)
+
+
+def rphistory_cache():
+    return caches[RP_CACHE]
 
 
 def playlist_to_python(xml_string, min_time=None):
@@ -109,8 +114,39 @@ def get_playlist_from_file(file_name):
 def get_playlist_from_url(url=None):
     if url is None:
         url = RP_PLAYLIST_URL
-    response = urlopen(url)
+    etag_cache_key = 'rphistory:etag:' + url
+    cache = rphistory_cache()
+    old_etag = cache.get(etag_cache_key)
+
+    response = get_response_if_modified(url, old_etag)
+    if response is None:
+        return None
+
+    try:
+        current_etag = response.headers['Etag']
+        cache.set(etag_cache_key, current_etag, None)
+    except AttributeError:
+        # For some reason there is no Etag header.  Clear the cache for the Etag.
+        log.warn("Playlist is not providing an Etag header")
+        if old_etag:
+            cache.set(etag_cache_key, '', 0)
     return response.read()
+
+
+def get_response_if_modified(url, etag=None):
+    if etag:
+        headers = {'If-None-Match': etag}
+    else:
+        headers = {}
+    req = Request(url, headers=headers)
+    try:
+        response = urlopen(req)
+        return response
+    except HTTPError as e:
+        if e.code == 304:
+            return None
+        else:
+            raise
 
 
 def get_info_from_asin(asin):

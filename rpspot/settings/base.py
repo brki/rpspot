@@ -93,8 +93,15 @@ CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
         'LOCATION': root('fs_cache', 'cache')
+    },
+    'rphistory': {
+        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+        'LOCATION': root('fs_cache', 'rphistory_cache')
+
     }
 }
+
+RP_CACHE='rphistory'
 
 SPOTIFY_CACHE = 'default'
 SPOTIFY_CLIENT_ID = env.str('SPOTIFY_CLIENT_ID')
