@@ -31,4 +31,3 @@ class SearchTrack(TestCase):
         self.assertIsNotNone(result.id)
         self.assertFalse(result.album_match)
         self.assertIn('CH', result.available_markets)
-

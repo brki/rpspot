@@ -2,8 +2,8 @@ from django.views.generic.base import TemplateView
 from django.utils import timezone
 from dateutil.parser import parse
 from pytz import utc
-
 from trackmap.models import Track
+
 
 class PlaylistView(TemplateView):
 
@@ -30,4 +30,3 @@ class PlaylistView(TemplateView):
             ','.join(track.spotify_id for track in context['tracks'])
         )
         return context
-

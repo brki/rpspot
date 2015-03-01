@@ -61,11 +61,7 @@ class TrackSearch(object):
         Gets the matching tracks that can be played per country.
 
         :param song: rphistory.Song object
-        :param track_title: title to search
-        :param artist_name: artist to search
-        :param album_title: album to search
-        :param album_year: album release year to search
-        :return: tuple: perfect_matches_dict, almost_matches_dict
+        :return: dict: best_matches
         """
         query = self.build_query(song.title, artist_name=song.artist.name)
         results = self.get_query_results(query)
@@ -96,7 +92,7 @@ class TrackSearch(object):
         Create the tracks and artist objects, and collects the per-market TrackAvailability objects.
 
         :param song: rphistory.Song object
-        :param country_tracks: map of country name string => TrackArtistAlbum namedtumple
+        :param market_tracks: map of country name string => TrackArtistAlbum namedtumple
         :return: list of TrackAvailability objects
         """
         availabilities = []
@@ -312,7 +308,7 @@ class TrackSearch(object):
         :param defaults: dict of field/value paris that will be used for other, non-identifying fields
         :return:
         """
-        #TODO: should clean before creating, too.
+        # TODO: should clean before creating, too.
         obj, created = model.objects.get_or_create(defaults=defaults, **kwargs)
 
         # Save back to DB if any info has changed.
@@ -335,5 +331,5 @@ class TrackSearch(object):
         :param artist_name:
         :return: string
         """
-        #TODO: should these be managed in the DB?
+        # TODO: should these be managed in the DB?
         return self.rp_to_spotify_artist_map.get(artist_name, artist_name)

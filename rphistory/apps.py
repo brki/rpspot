@@ -11,4 +11,3 @@ class RpHistoryConfig(AppConfig):
             from rphistory.radioparadise import rphistory_cache
             rphistory_cache().clear()
             self.cache_cleared = True
-

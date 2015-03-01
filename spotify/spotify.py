@@ -5,16 +5,20 @@ from django.core.cache import caches
 import requests
 import spotipy
 
-CLIENT_CREDENTIALS_CACHE_KEY='spotify_client_credentials'
-CLIENT_CREDENTIALS_URL='https://accounts.spotify.com/api/token'
+
+CLIENT_CREDENTIALS_CACHE_KEY = 'spotify_client_credentials'
+CLIENT_CREDENTIALS_URL = 'https://accounts.spotify.com/api/token'
 
 TrackResult = namedtuple('TrackResult', 'id album_match available_markets')
+
 
 def spotify():
     return spotipy.Spotify(auth=client_credentials_token())
 
+
 def spotify_cache():
     return caches[settings.SPOTIFY_CACHE]
+
 
 def client_credentials_token():
     cache = spotify_cache()
@@ -23,6 +27,7 @@ def client_credentials_token():
         token, _, expires = fetch_new_client_credentials_token()
         cache.set(CLIENT_CREDENTIALS_CACHE_KEY, token, expires - 60)
     return token
+
 
 def fetch_new_client_credentials_token():
     data = {'grant_type': 'client_credentials'}
@@ -91,4 +96,3 @@ def find_track(track, artist=None, album=None, country_code=None):
         return matches[0]
 
     return None
-

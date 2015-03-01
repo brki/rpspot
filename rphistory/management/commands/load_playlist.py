@@ -19,7 +19,7 @@ class Command(BaseCommand):
 
         playlist_file = options['playlist']
         if playlist_file:
-            url =  RP_PLAYLIST_BASE + playlist_file
+            url = RP_PLAYLIST_BASE + playlist_file
         else:
             url = None
         latest_song = History.objects.all().order_by('-played_at').first()

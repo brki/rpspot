@@ -62,7 +62,7 @@ def playlist_to_python(xml_string, min_time=None):
             album_release_year=int(song.find('release_date').text),
         ))
 
-    sorted_songs = sorted(songs, key=lambda song: song.time)
+    sorted_songs = sorted(songs, key=lambda s: s.time)
     return sorted_songs
 
 
@@ -152,7 +152,7 @@ def get_response_if_modified(url, etag=None):
 def get_info_from_asin(asin):
     if not asin:
         return None
-    #url = "http://www.amazon.com/exec/obidos/ASIN/{}".format(asin)
+    # alternative: url = "http://www.amazon.com/exec/obidos/ASIN/{}".format(asin)
     url = "http://www.amazon.com/exec/obidos/tg/detail/-/{}".format(asin)
     try:
         page = urlopen(url, timeout=10).read()

@@ -13,7 +13,7 @@ DEBUG = env('DEBUG')
 TEMPLATE_DEBUG = DEBUG
 
 DATABASES = {
-    'default': env.db(), # Raises ImproperlyConfigured exception if DATABASE_URL not in os.environ
+    'default': env.db(),  # Raises ImproperlyConfigured exception if DATABASE_URL not in os.environ
 }
 
 public_root = root.path('public/')
@@ -25,7 +25,7 @@ STATIC_ROOT = public_root('static')
 STATIC_URL = '/static/'
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = env('SECRET_KEY') # Raises ImproperlyConfigured exception if SECRET_KEY not in os.environ
+SECRET_KEY = env('SECRET_KEY')  # Raises ImproperlyConfigured exception if SECRET_KEY not in os.environ
 
 ALLOWED_HOSTS = env('ALLOWED_HOSTS')
 
@@ -88,7 +88,7 @@ USE_L10N = True
 
 USE_TZ = True
 
-INTERNAL_IPS=tuple(env.list('INTERNAL_IPS', None, ['127.0.0.1']))
+INTERNAL_IPS = tuple(env.list('INTERNAL_IPS', None, ['127.0.0.1']))
 
 CACHES = {
     'default': {
@@ -102,13 +102,13 @@ CACHES = {
     }
 }
 
-RP_CACHE='rphistory'
+RP_CACHE = 'rphistory'
 
 SPOTIFY_CACHE = 'default'
 SPOTIFY_CLIENT_ID = env.str('SPOTIFY_CLIENT_ID')
 SPOTIFY_CLIENT_SECRET = env.str('SPOTIFY_CLIENT_SECRET')
 
-#TODO: adjust for different environments:
+# TODO: adjust for different environments:
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': True,

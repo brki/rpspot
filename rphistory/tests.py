@@ -4,6 +4,7 @@ from rphistory.settings import RP_PLAYLIST_BASE
 
 from rphistory.radioparadise import get_info_from_asin
 
+
 class AsinFetch(TestCase):
     def test_album_title_from_asin(self):
         asin = 'B0000062FJ'
@@ -11,6 +12,7 @@ class AsinFetch(TestCase):
         info = get_info_from_asin(asin)
         self.assertIsNotNone(info)
         self.assertEqual(expected_title, info.title)
+
 
 class PlaylistFetch(TestCase):
     def tearDown(self):
