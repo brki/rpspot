@@ -46,6 +46,8 @@ class TrackSearch(object):
     rp_to_spotify_artist_map = {
         'Bob Marley': 'Bob Marley & The Wailers',
         'The English Beat': 'The Beat',
+        'English Beat': 'The Beat',
+        'Allman Brothers': 'The Allman Brothers Band',
     }
 
     def __init__(self, query_limit=40, max_items_to_process=200):
