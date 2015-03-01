@@ -1,4 +1,5 @@
 from django.core.management.base import BaseCommand
+from django.db.models import Q
 from rphistory.models import Song
 from trackmap.models import TrackSearchHistory
 from trackmap.trackmap import TrackSearch, utc_now
@@ -12,13 +13,20 @@ class Command(BaseCommand):
     help = 'Maps new Radio Paradise playlist songs to Spotify tracks'
 
     def add_arguments(self, parser):
-        parser.add_argument('limit', nargs='?', type=int, default=0,
+        parser.add_argument('--limit', dest='limit', nargs='?', type=int, default=0,
                             help='Only process <limit> new Radio Paradise songs')
+        parser.add_argument('--failed', dest='failed', action='store_true', default=False,
+                            help='Re-process songs for which no match was found')
 
     def handle(self, *args, **options):
 
         limit = options['limit']
-        new_songs = Song.objects.filter(search_history__isnull=True).select_related('album', 'artist')
+        if options['failed']:
+            filter = Q(search_history__found=False)
+        else:
+            filter = Q(search_history__isnull=True)
+
+        new_songs = Song.objects.filter(filter).select_related('album', 'artist')
         if limit:
             new_songs = new_songs[:limit]
 
