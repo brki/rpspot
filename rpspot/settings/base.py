@@ -23,6 +23,9 @@ MEDIA_URL = 'media/'
 # https://docs.djangoproject.com/en/dev/howto/static-files/
 STATIC_ROOT = public_root('static')
 STATIC_URL = '/static/'
+STATICFILES_DIRS = (
+    root('static'),
+)
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = env('SECRET_KEY')  # Raises ImproperlyConfigured exception if SECRET_KEY not in os.environ
@@ -59,7 +62,7 @@ ROOT_URLCONF = 'rpspot.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [root('templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
