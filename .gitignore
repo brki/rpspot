@@ -1,4 +1,3 @@
-fs_cache/*
 .env
 *.pyo
 *.pyc
