@@ -1,0 +1,101 @@
+@import "settings";
+//@import "foundation";
+
+// Or selectively include components
+@import "foundation/components/tables",
+   "foundation/components/buttons",
+   "foundation/components/grid",
+   "foundation/components/type",
+   "foundation/components/visibility";
+//   "foundation/components/accordion",
+//   "foundation/components/alert-boxes",
+//   "foundation/components/block-grid",
+//   "foundation/components/breadcrumbs",
+//   "foundation/components/button-groups",
+//   "foundation/components/buttons",
+//   "foundation/components/clearing",
+//   "foundation/components/dropdown",
+//   "foundation/components/dropdown-buttons",
+//   "foundation/components/flex-video",
+//   "foundation/components/forms",
+//   "foundation/components/grid",
+//   "foundation/components/inline-lists",
+//   "foundation/components/joyride",
+//   "foundation/components/keystrokes",
+//   "foundation/components/labels",
+//   "foundation/components/magellan",
+//   "foundation/components/orbit",
+//   "foundation/components/pagination",
+//   "foundation/components/panels",
+//   "foundation/components/pricing-tables",
+//   "foundation/components/progress-bars",
+//   "foundation/components/reveal",
+//   "foundation/components/side-nav",
+//   "foundation/components/split-buttons",
+//   "foundation/components/sub-nav",
+//   "foundation/components/switches",
+//   "foundation/components/tables",
+//   "foundation/components/tabs",
+//   "foundation/components/thumbs",
+//   "foundation/components/tooltips",
+//   "foundation/components/top-bar",
+//   "foundation/components/type",
+//   "foundation/components/offcanvas",
+//   "foundation/components/visibility";
+
+div.main-content {
+
+  $left-gutter-small: rem-calc(4);
+  $left-gutter-medium-up: rem-calc(20);
+
+  margin: 0 $left-gutter-small;
+  @media #{$medium-up} {
+    margin: 0 $left-gutter-medium-up;
+  }
+
+  div.intro {
+    max-width: rem-calc(800);
+  }
+
+  div#track-list {
+    margin-right: rem-calc(4);
+    @media #{$medium-up} {
+      margin-right: rem-calc(10);
+    }
+  }
+
+  table#playlist {
+    th {
+      text-align: center;
+    }
+
+    td.airtime {
+      span.time {
+        display: block;
+      }
+    }
+
+    td.album {
+
+      div.info {
+        padding-left: rem-calc(6);
+
+        div.artist {
+          margin-bottom: rem-calc(10);
+        }
+
+        span.album-title {
+          font-weight: $font-weight-bold;
+        }
+      }
+    }
+
+    td.track-title {
+      span {
+        font-weight: $font-weight-bold;
+        font-size: rem-calc(16);
+      }
+    }
+  }
+}
+

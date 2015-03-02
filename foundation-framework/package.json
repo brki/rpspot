@@ -1,0 +1,10 @@
+{ "name" : "rpspot-frontend"
+, "version" : "1.0.0"
+, "dependencies" : {
+   "gulp" : "3.x",
+   "del" : "1.1.x",
+   "yargs" : "3.4.x",
+   "gulp-if" : "1.2.x",
+   "gulp-uglify" : "1.1.x"
+  }
+}

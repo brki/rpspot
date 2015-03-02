@@ -1,0 +1,31 @@
+## Requirements
+
+  * Ruby 1.9+
+  * [Node.js](http://nodejs.org)
+  * [compass](http://compass-style.org/): `gem install compass`
+  * [bower](http://bower.io): `npm install bower -g`
+
+All commands below are meant to be run while in the current directory.
+
+== install bower-managed packages (listed in bower.json) ==
+$ bower update
+
+== install npm packages (listed in packages.json) ==
+$ npm install
+
+
+=== Development workflow ===
+== While working on scss files in scss dir ==
+This uses the bundle version of compass (specified in Gemfile):
+$ bundle exec compass watch
+
+== Copy changed files to statfiles dir when they are changed ==
+$ gulp watch
+
+=== Generating production files workflow ===
+== Generate prod-ready css files ==
+$ bundle exec compass clean -c config_prod.rb
+$ bundle exec compass compile -c config_prod.rb
+
+== Copy css and js files to staticfiles dir ==
+$ gulp provision_static --production
