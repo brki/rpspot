@@ -59,10 +59,17 @@ class Track(models.Model):
     objects = TrackManager()
 
 
+class TrackAvailabilityManager(models.Manager):
+    def all_markets(self):
+        return self.all().distinct(['country']).order_by('country')
+
+
 class TrackAvailability(models.Model):
     track = models.ForeignKey(Track)
     rp_song = models.ForeignKey(Song, related_name="available_tracks")
     country = models.CharField(max_length=2)
+    score = models.IntegerField(default=0)
+    objects = TrackAvailabilityManager()
 
     class Meta:
         unique_together = (('track', 'rp_song', 'country'),)

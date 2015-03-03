@@ -61,7 +61,7 @@ class TrackSearch(object):
         Gets the matching tracks that can be played per country.
 
         :param song: rphistory.Song object
-        :return: dict: best_matches
+        :return: tuple: (dict: best_matches, dict: matches_score)
         """
         query = self.build_query(song.title, artist_name=song.artist.name)
         results = self.get_query_results(query)
@@ -85,14 +85,15 @@ class TrackSearch(object):
                     best_matches[country] = TrackArtistAlbum(
                         track_info=track_info, artist_info=artist_info, album_info=album_info
                     )
-        return best_matches
+        return best_matches, matches_score
 
-    def create_tracks(self, song, market_tracks):
+    def create_tracks(self, song, market_tracks, market_scores):
         """
         Create the tracks and artist objects, and collects the per-market TrackAvailability objects.
 
         :param song: rphistory.Song object
         :param market_tracks: map of country name string => TrackArtistAlbum namedtumple
+        :param market_scores: map of country name string => match score
         :return: list of TrackAvailability objects
         """
         availabilities = []
@@ -107,7 +108,8 @@ class TrackSearch(object):
                 except IntegrityError as e:
                     log.warn("Problem creating track for rp song {}: {}".format(song.rp_song_id, e))
                     continue
-            track_availability = TrackAvailability(track=track, rp_song=song, country=country)
+            track_availability = TrackAvailability(
+                track=track, rp_song=song, country=country, score=market_scores[country])
             track_availability.full_clean(validate_unique=False)
             availabilities.append(track_availability)
         return availabilities

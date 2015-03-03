@@ -35,9 +35,9 @@ class Command(BaseCommand):
         found_count = 0
         for song in new_songs:
             log.debug("Processing %s - %s", song.artist.name, song.title)
-            matches = track_search.find_matching_tracks(song)
+            matches, scores = track_search.find_matching_tracks(song)
             if matches:
-                track_availabilities = track_search.create_tracks(song, matches)
+                track_availabilities = track_search.create_tracks(song, matches, scores)
                 track_search.update_db_with_availibility(song, track_availabilities)
                 found = True
                 found_count += 1
