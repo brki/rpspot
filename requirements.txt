@@ -1,8 +1,10 @@
--e git+https://github.com/django/django.git@259259a819a12a9ecfd0448c646899fad78e23e0#egg=Django-origin/stable/1.8.x
+-e git+https://github.com/django/django.git@44dd65fb2ca8c008a4ca83cd8fdb2d14004f2543#egg=Django-origin/stable/1.8.x
+-e git+https://github.com/brki/spotipy@75d433ad1f3f78b4a55b0fd0061b360b33da6ef1#egg=spotipy-python3-spotipy
+beautifulsoup4==4.3.2
 django-environ==0.3.0
-requests==2.5.1
+django-ipware==0.1.0
 psycopg2==2.6
 python-dateutil==2.4.0
 pytz==2014.10
+requests==2.5.1
 six==1.9.0
-beautifulsoup4==4.3.2
