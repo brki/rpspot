@@ -102,10 +102,16 @@ CACHES = {
         'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
         'LOCATION': root('fs_cache', 'rphistory_cache')
 
-    }
+    },
+    'trackmap': {
+        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+        'LOCATION': root('fs_cache', 'trackmap_cache')
+
+    },
 }
 
 RP_CACHE = 'rphistory'
+TRACKMAP_CACHE = 'trackmap'
 
 SPOTIFY_CACHE = 'default'
 SPOTIFY_CLIENT_ID = env.str('SPOTIFY_CLIENT_ID')

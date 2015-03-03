@@ -1,5 +1,6 @@
 from django.db import models
 from rphistory.models import Song, History
+from trackmap.trackmap import trackmap_cache
 
 
 class Album(models.Model):
@@ -60,8 +61,17 @@ class Track(models.Model):
 
 
 class TrackAvailabilityManager(models.Manager):
-    def all_markets(self):
-        return self.all().distinct(['country']).order_by('country')
+    def all_markets(self, force_cache_refresh=False):
+        cache = trackmap_cache()
+        cache_key = 'track_availability_countries'
+        if not force_cache_refresh:
+            countries = cache.get(cache_key)
+            if countries:
+                return countries
+
+        countries =  self.all().distinct('country').order_by('country').values('country')
+        cache.set(cache_key, countries, 60*60*24)
+        return countries
 
 
 class TrackAvailability(models.Model):
