@@ -111,6 +111,8 @@ SPOTIFY_CACHE = 'default'
 SPOTIFY_CLIENT_ID = env.str('SPOTIFY_CLIENT_ID')
 SPOTIFY_CLIENT_SECRET = env.str('SPOTIFY_CLIENT_SECRET')
 
+GEOIP_PATH = env.str('GEOIP_PATH')
+
 # TODO: adjust for different environments:
 LOGGING = {
     'version': 1,

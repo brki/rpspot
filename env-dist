@@ -8,3 +8,4 @@ SECRET_KEY=a long secret key
 DATABASE_URL=postgres://user:pass@host_or_ip:5432/dbname
 SPOTIFY_CLIENT_ID=client_id
 SPOTIFY_CLIENT_SECRET=client_secret
+GEOIP_PATH=/path/to/geoip/datafile/dir
