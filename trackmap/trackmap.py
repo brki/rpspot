@@ -48,6 +48,7 @@ class TrackSearch(object):
         'The English Beat': 'The Beat',
         'English Beat': 'The Beat',
         'Allman Brothers': 'The Allman Brothers Band',
+        'Trail of Dead': '...And You Will Know Us By The Trail Of Dead',
     }
 
     def __init__(self, query_limit=40, max_items_to_process=200):
