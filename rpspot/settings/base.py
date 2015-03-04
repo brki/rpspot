@@ -1,3 +1,4 @@
+from tempfile import gettempdir
 import environ
 root = environ.Path(__file__) - 3
 
@@ -110,8 +111,12 @@ CACHES = {
     },
 }
 
+SESSION_ENGINE = 'django.contrib.sessions.backends.file'
+SESSION_FILE_PATH = env.str('SESSION_FILE_PATH', gettempdir())
+
 RP_CACHE = 'rphistory'
 TRACKMAP_CACHE = 'trackmap'
+TRACKMAP_DEFAULT_COUNTRY = 'US'
 
 SPOTIFY_CACHE = 'default'
 SPOTIFY_CLIENT_ID = env.str('SPOTIFY_CLIENT_ID')
