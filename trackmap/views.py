@@ -15,7 +15,6 @@ log = getLogger(__name__)
 class PlaylistView(TemplateView):
 
     template_name = "trackmap/playlists.html"
-    default_track_limit = 14
 
     def get_context_data(self, **kwargs):
         context = super(PlaylistView, self).get_context_data(**kwargs)
@@ -47,9 +46,9 @@ class PlaylistView(TemplateView):
 
     def set_session_data(self):
         session = self.request.session
-        limit = self.request_value('limit', self.default_track_limit)
+        limit = self.request_value('limit') or session.get('limit', None) or settings.TRACKMAP_DEFAULT_TRACK_LIMIT
         country = self.request_value('country')
-        timezone = self.request_value('timezone')
+        timezone = self.request_value('timezone') or session.get('timezone') or settings.TRACKMAP_DEFAULT_TIMEZONE
 
         is_country_known = country is not None or session.get('is_country_known', False)
         if not country:
@@ -63,10 +62,8 @@ class PlaylistView(TemplateView):
 
         self.set_session_value('country', country)
         self.set_session_value('is_country_known', is_country_known)
-        if limit:
-            self.set_session_value('limit', limit)
-        if timezone:
-            self.set_session_value('timezone', timezone)
+        self.set_session_value('limit', limit)
+        self.set_session_value('timezone', timezone)
 
     def get_visitor_country(self):
         ip = get_real_ip(self.request)
