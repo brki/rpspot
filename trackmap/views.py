@@ -47,9 +47,8 @@ class PlaylistView(TemplateView):
     def set_session_data(self):
         session = self.request.session
         limit = self.request_value('limit') or session.get('limit', None) or settings.TRACKMAP_DEFAULT_TRACK_LIMIT
-        country = self.request_value('country')
         timezone = self.request_value('timezone') or session.get('timezone') or settings.TRACKMAP_DEFAULT_TIMEZONE
-
+        country = self.request_value('country')
         is_country_known = country is not None or session.get('is_country_known', False)
         if not country:
             country = session.get('country', None)
