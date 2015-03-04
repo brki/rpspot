@@ -4,11 +4,9 @@ from operator import itemgetter
 import re
 import unicodedata
 
-from django.conf import settings
 from django.db import transaction
 from django.db.utils import IntegrityError
 from django.utils import timezone
-from django.utils.cache import caches
 
 from spotify.spotify import spotify
 from trackmap.models import Album, Track, TrackAvailability
@@ -22,9 +20,6 @@ TrackArtistAlbum = namedtuple('TrackArtistAlbum', 'track_info artist_info album_
 
 log = logging.getLogger(__name__)
 
-
-def trackmap_cache():
-    return caches[settings.TRACKMAP_CACHE]
 
 def utc_now():
     return timezone.now().replace(tzinfo=timezone.utc)

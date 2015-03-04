@@ -1,6 +1,6 @@
 from django.db import models
 from rphistory.models import Song, History
-from trackmap.trackmap import trackmap_cache
+from trackmap import trackmap_cache
 
 
 class Album(models.Model):
