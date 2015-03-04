@@ -64,6 +64,9 @@ class PlaylistView(TemplateView):
         self.set_session_value('limit', limit)
         self.set_session_value('timezone', timezone)
 
+        if session.get_expiry_age() < settings.TRACKMAP_SESSION_RENEW_WHEN_SECONDS_LEFT:
+            session.set_expiry(settings.TRACKMAP_SESSION_EXPIRY)
+
     def get_visitor_country(self):
         ip = get_real_ip(self.request)
         if ip:
