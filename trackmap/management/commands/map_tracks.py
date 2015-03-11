@@ -34,7 +34,6 @@ class Command(BaseCommand):
         track_search = TrackSearch()
         found_count = 0
         for song in new_songs:
-            log.debug("Processing %s - %s", song.artist.name, song.title)
             matches, scores = track_search.find_matching_tracks(song)
             if matches:
                 track_availabilities = track_search.create_tracks(song, matches, scores)
@@ -43,6 +42,9 @@ class Command(BaseCommand):
                 found_count += 1
             else:
                 found = False
+            if not found:
+                log.info("Not found: {} - {} (album: {}, asin: {})".format(
+                    song.artist.name, song.title, song.album.title, song.album.asin))
 
             TrackSearchHistory.objects.update_or_create(
                 rp_song=song,

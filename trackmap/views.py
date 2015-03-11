@@ -14,7 +14,7 @@ log = getLogger(__name__)
 
 class PlaylistView(TemplateView):
 
-    template_name = "trackmap/playlists.html"
+    template_name = "trackmap/playlist.html"
 
     def get_context_data(self, **kwargs):
         context = super(PlaylistView, self).get_context_data(**kwargs)

@@ -107,7 +107,7 @@ class TrackSearch(object):
                     track = self.get_or_create_track(info.track_info, info.artist_info, info.album_info)
                     track_cache[spotify_id] = track
                 except IntegrityError as e:
-                    log.warn("Problem creating track for rp song {}: {}".format(song.rp_song_id, e))
+                    log.warn("Problem (db integrity error)creating track for rp song {}: {}".format(song.rp_song_id, e))
                     continue
             track_availability = TrackAvailability(
                 track=track, rp_song=song, country=country, score=market_scores[country])
