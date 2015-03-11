@@ -69,7 +69,7 @@ class TrackAvailabilityManager(models.Manager):
             if countries:
                 return countries
 
-        countries =  self.all().distinct('country').order_by('country').values('country')
+        countries =  self.values_list('country', flat=True).distinct('country').order_by('country')
         cache.set(cache_key, countries, 60*60*24)
         return countries
 
@@ -89,3 +89,11 @@ class TrackSearchHistory(models.Model):
     rp_song = models.OneToOneField(Song, related_name="search_history")
     search_time = models.DateTimeField(null=False)
     found = models.BooleanField(default=False)
+
+
+class HandmappedTrack(models.Model):
+    #TODO: add logic to directly map song to track for known track_id
+    rp_song = models.OneToOneField(Song, related_name="handmapped_track")
+    spotify_track_id = models.CharField(max_length=120, help_text="Spotify track id")
+    info_url = models.CharField(max_length=255, blank=True, help_text="URL to resource with information about album")
+    processed = models.BooleanField(default=False)
