@@ -1,0 +1,124 @@
+{% extends "site/base.html" %}
+{% load i18n %}
+{% load l10n %}
+
+{% block title %}
+    {%  trans "Generate Spotify playlist based on Radio Paradise playlist history" noop %}
+{% endblock %}
+
+{% block content %}
+    <div class="main-content">
+        <div class="intro row">
+            <div class="column small-10 small-centered end">
+                <h1 id="playlist-page-title">Playlist Generator</h1>
+                <h2 class="subheader">
+                    Here you can see tracks that have played recently on
+                    <a href="http://radioparadise.com">Radio Paradise</a>, that are also available on Spotify.
+                </h2>
+                <p>
+                    <strong>Note:</strong> the "Open in Spotify" button doesn't work for the moment on mobile devices,
+                    due to Spotify app implementation details.
+                </p>
+            </div>
+        </div>
+        <div class="row playlist-options">
+            <div id="playlist-options">
+                <div class="column small-12 medium-9 end">
+                    <ul class="accordion" data-accordion>
+                        <li class="accordion-navigation">
+                            <a href="#options" class="button radius options">
+                                <span class="status"></span>
+                                <span class="options-text">{% trans "Options" noop %}</span>
+                            </a>
+                            <div id="options" class="content">
+                                <form method="POST">
+                                    {% csrf_token %}
+                                    <ul class="inline-list">
+                                        {{ form.as_ul }}
+                                    </ul>
+                                    <input type="submit" class="button" />
+                                </form>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div id="playlist-container clearfix">
+            <div class="row">
+                <div class="column small-12 medium-9">
+                    {% for t in tracks %}
+                        <div class="row">
+                            <div class="column small-4">
+                               {{  t.title }}
+                            </div>
+                            <div class="column small-5">
+                                <div class="row small-collapse">
+                                    <div class="small-3 medium-2 columns">
+                                        <img src="{{ t.img_small_url }}" alt="{{ t.album_title }}" />
+                                    </div>
+                                    <div class="info small-9 medium-10 columns">
+                                        <div class="artist">
+                                            <span>{{ t.artist }}</span>
+                                        </div>
+                                        <span class="album-title">{{ t.album_title }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="column small-3">
+                                <span class="time">{{ t.played_at|date:"TIME_FORMAT" }}</span>
+                                <span class="date">{{ t.played_at|date:"SHORT_DATE_FORMAT" }}</span>
+                            </div>
+
+                        </div>
+                    {% endfor %}
+
+
+<!--                        <table id="playlist" class="table table-striped table-responsive">
+                    <div id="track-list" class="left">
+                            <thead>
+                            <tr>
+                                <th>{% trans "Song" noop %}</th>
+                                <th>{% trans "Album" noop %}</th>
+                                <th>{% trans "Aired at" noop %}</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for t in tracks %}
+                                <tr>
+                                    <td class="track-title text-right"><span>{{ t.title }}</span></td>
+                                    <td class="album">
+                                        <div class="row small-collapse">
+                                            <div class="small-3 medium-2 columns">
+                                                <img src="{{ t.img_small_url }}" alt="{{ t.album_title }}" />
+                                            </div>
+                                            <div class="info small-9 medium-10 columns">
+                                                <div class="artist">
+                                                    <span>{{ t.artist }}</span>
+                                                </div>
+                                                <span class="album-title">{{ t.album_title }}</span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="airtime">
+                                        <span class="time">{{ t.played_at|date:"TIME_FORMAT" }}</span>
+                                        <span class="date">{{ t.played_at|date:"SHORT_DATE_FORMAT" }}</span>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                        -->
+
+                </div>
+                <div class="column small-12 medium-3">
+                    <div class="open-in-spotify flex-video">
+                        <iframe src="https://embed.spotify.com/?uri={{ playlist_uri }}" frameborder="0" allowtransparency="true"></iframe>
+                        <!-- 2015-03-01: plain link no longer works:<a class="button" href="{{ playlist_uri }}">{% trans "Open in Spotify" noop %}</a> -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
