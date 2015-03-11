@@ -115,12 +115,6 @@ SESSION_ENGINE = 'django.contrib.sessions.backends.file'
 SESSION_FILE_PATH = env.str('SESSION_FILE_PATH', gettempdir())
 
 RP_CACHE = 'rphistory'
-TRACKMAP_CACHE = 'trackmap'
-TRACKMAP_DEFAULT_COUNTRY = 'US'
-TRACKMAP_DEFAULT_TRACK_LIMIT = 14
-TRACKMAP_DEFAULT_TIMEZONE = 'US/Pacific'
-TRACKMAP_SESSION_EXPIRY = 60*60*24*180
-TRACKMAP_SESSION_RENEW_WHEN_SECONDS_LEFT = 60*60*24*90
 
 SPOTIFY_CACHE = 'default'
 SPOTIFY_CLIENT_ID = env.str('SPOTIFY_CLIENT_ID')
@@ -128,7 +122,10 @@ SPOTIFY_CLIENT_SECRET = env.str('SPOTIFY_CLIENT_SECRET')
 
 GEOIP_PATH = env.str('GEOIP_PATH')
 
-# TODO: adjust for different environments:
+TRACKMAP_LOG_LEVEL = env.str('TRACKMAP_LOG_LEVEL', None)
+RPHISTORY_LOG_LEVEL = env.str('RPHISTORY_LOG_LEVEL', None)
+REQUEST_LOG_LEVEL = env.str('REQUEST_LOG_LEVEL', None)
+LOG_DIR = env.str('LOG_DIR')
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': True,
@@ -146,14 +143,14 @@ LOGGING = {
         #     'backupCount': 5,
         #     'formatter':'standard',
         # },
-        # 'request_handler': {
-        #     'level':'DEBUG',
-        #     'class':'logging.handlers.RotatingFileHandler',
-        #     'filename': 'logs/django_request.log',
-        #     'maxBytes': 1024*1024*5, # 5 MB
-        #     'backupCount': 5,
-        #     'formatter':'standard',
-        # },
+       'request_handler': {
+            'level':'DEBUG',
+            'class':'logging.handlers.RotatingFileHandler',
+            'filename': LOG_DIR +'/django_request.log',
+            'maxBytes': 1024*1024*5, # 5 MB
+            'backupCount': 5,
+            'formatter':'standard',
+        },
         'console': {
             'level': 'DEBUG',
             'class': 'logging.StreamHandler',
@@ -168,18 +165,18 @@ LOGGING = {
         # },
         'trackmap': {
             'handlers': ['console'],
-            'level': 'DEBUG' if DEBUG else 'ERROR',
+            'level': TRACKMAP_LOG_LEVEL or 'ERROR',
             'propagate': True
         },
         'rphistory': {
             'handlers': ['console'],
-            'level': 'DEBUG' if DEBUG else 'ERROR',
+            'level': RPHISTORY_LOG_LEVEL or 'ERROR',
             'propagate': True
         },
-        # 'django.request': {
-        #     'handlers': ['request_handler'],
-        #     'level': 'DEBUG',
-        #     'propagate': False
-        # },
+        'django.request': {
+            'handlers': ['request_handler'],
+            'level': REQUEST_LOG_LEVEL or 'ERROR',
+            'propagate': False
+        },
     }
 }

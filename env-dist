@@ -9,7 +9,11 @@ DATABASE_URL=postgres://user:pass@host_or_ip:5432/dbname
 SPOTIFY_CLIENT_ID=client_id
 SPOTIFY_CLIENT_SECRET=client_secret
 GEOIP_PATH=/path/to/geoip/datafile/dir
+LOG_DIR=/absolute/or/relative/path/to/log/dir
 
 # optional settings below:
 SESSION_FILE_PATH=/path/to/session/file/dir   (will default to system temp dir)
+RPHISTORY_LOG_LEVEL='DEBUG'
+TRACKMAP_LOG_LEVEL='INFO'
+REQUEST_LOG_LEVEL='WARN'
 
