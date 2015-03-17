@@ -337,5 +337,5 @@ TIMEZONE_LIST = [
     'Pacific/Tongatapu',
     'UTC',
 ]
-TIMEZONE_SELECT = tuple([tuple([tz, tz]) for tz in TIMEZONE_LIST])
+TIMEZONE_SELECT = tuple([tuple([tz, tz.replace('_', ' ')]) for tz in TIMEZONE_LIST])
 

@@ -49,6 +49,7 @@ class TrackSearch(object):
         'English Beat': 'The Beat',
         'Allman Brothers': 'The Allman Brothers Band',
         'Trail of Dead': '...And You Will Know Us By The Trail Of Dead',
+        'Robert Plant & Alison Krauss': ['Robert Plant', 'Alison Krauss']
     }
 
     def __init__(self, query_limit=40, max_items_to_process=200):
@@ -64,12 +65,20 @@ class TrackSearch(object):
         :param song: rphistory.Song object
         :return: tuple: (dict: best_matches, dict: matches_score)
         """
-        query = self.build_query(song.title, artist_name=song.artist.name)
+
+        #TODO: a fair number of the songs that fail to match fail because the song title is slightly different
+        #      between radio paradise and spotify.  It might be worth a second pass that tries to find
+        #      a song whose name almost matches on the album, if the album can be matched.
+        artist_name = self.map_artist_name(song.artist.name)
+        query = self.build_query(song.title, artist_name=artist_name)
+        # It's important for the query to have multiple author names separately, but the rest of the code
+        # is expecting a single author name.  This will only happen if the name has been mapped to multiple names.
+        if not isinstance(artist_name, str):
+            artist_name = artist_name.pop()
         results = self.get_query_results(query)
         self.add_full_album_info(results)
         best_matches = {}
         matches_score = {}
-        artist_name = self.map_artist_name(song.artist.name)
         for item in results:
             track_info = self.extract_track_info(song.title, item)
             artist_info = self.extract_artist_info(artist_name, item['artists'])
@@ -133,13 +142,17 @@ class TrackSearch(object):
         Builds a query based on the passed values.
 
         :param track_title:
-        :param artist_name:
+        :param artist_name: string or iterable of artist names
         :param album_title:
         :return: query string
         """
         q = ['track:"{}"'.format(track_title)]
         if artist_name:
-            q.append('artist:"{}"'.format(artist_name))
+            if isinstance(artist_name, str):
+                q.append('artist:"{}"'.format(artist_name))
+            else:
+                for name in artist_name:
+                    q.append('artist:"{}"'.format(name))
         if album_title:
             q.append('album:"{}"'.format(album_title))
         return ' '.join(q)
@@ -212,7 +225,7 @@ class TrackSearch(object):
         good job of detecting a matching artist name.
 
         :param artist: string
-        :param artist_list: array of spotify API album results
+        :param artist_list: array of spotify API album artist results
         :return: ArtistInfo
         """
         artist_simple = self.simplified_text(artist)

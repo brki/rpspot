@@ -8,9 +8,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{% block title %}Page title{% endblock %}</title>
     <link rel="stylesheet" href="{% static "stylesheets/normalize.css"%}" />
-      <link rel="stylesheet" href="{% static "stylesheets/app.css"%}" />
+    <link rel="stylesheet" href="{% static "stylesheets/app.css"%}" />
     <script src="{% static "js/vendor/modernizr.js" %}"></script>
-    {% block head_content %}{% endblock %}
+    {% block head_stylesheets %}{% endblock %}
   </head>
   <body>
       <main>
@@ -18,7 +18,7 @@
       </main>
     <script src="{% static "js/vendor/jquery.min.js" %}"></script>
     <script src="{% static "js/vendor/foundation.min.js" %}"></script>
-    {% block body_end_content %}
+    {% block body_end_scripts %}
         <script src="{% static "js/app.js" %}"></script>
     {% endblock %}
   </body>

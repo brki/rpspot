@@ -2,12 +2,15 @@
 //@import "foundation";
 
 // Or selectively include components
-@import "foundation/components/tables",
+@import
+   "foundation/components/accordion",
    "foundation/components/buttons",
    "foundation/components/grid",
-   "foundation/components/type",
-   "foundation/components/visibility";
-//   "foundation/components/accordion",
+   "foundation/components/inline-lists",
+   "foundation/components/type";
+//   "foundation/components/flex-video", // for fluidizing the spotify iframe
+//   "foundation/components/tables",
+//   "foundation/components/visibility";
 //   "foundation/components/alert-boxes",
 //   "foundation/components/block-grid",
 //   "foundation/components/breadcrumbs",
@@ -19,7 +22,6 @@
 //   "foundation/components/flex-video",
 //   "foundation/components/forms",
 //   "foundation/components/grid",
-//   "foundation/components/inline-lists",
 //   "foundation/components/joyride",
 //   "foundation/components/keystrokes",
 //   "foundation/components/labels",
@@ -48,54 +50,53 @@ div.main-content {
   $left-gutter-small: rem-calc(4);
   $left-gutter-medium-up: rem-calc(20);
 
-  margin: 0 $left-gutter-small;
+  margin-left: auto;
+  margin-right: auto;
+  width: rem-calc(400);
   @media #{$medium-up} {
-    margin: 0 $left-gutter-medium-up;
+    width: rem-calc(600);
   }
 
-  div.intro {
-    max-width: rem-calc(800);
+  div#playlist-wrapper {
+    position: relative;
+  }
+  iframe#spotify-playlist {
+    display: block;
+    position: absolute;
+    height: 1000px;
+    width: 90%;
   }
 
-  div#track-list {
-    margin-right: rem-calc(4);
-    @media #{$medium-up} {
-      margin-right: rem-calc(10);
-    }
-  }
-
-  table#playlist {
-    th {
-      text-align: center;
-    }
-
-    td.airtime {
-      span.time {
-        display: block;
+  div#playlist-options {
+    background-color: #ffffff;
+    margin-bottom: 1rem;
+    ul.accordion {
+      margin-left: 0;
+      a.options.button {
+        display: inline-block;
+        margin: 0;
       }
-    }
-
-    td.album {
-
-      div.info {
-        padding-left: rem-calc(6);
-
-        div.artist {
-          margin-bottom: rem-calc(10);
+      div#options {
+        background: #e8e8e8;
+        padding-top: 0;
+        ul.inline-list li {
+          height: 3.2rem;
         }
-
-        span.album-title {
-          font-weight: $font-weight-bold;
-        }
-      }
-    }
-
-    td.track-title {
-      span {
-        font-weight: $font-weight-bold;
-        font-size: rem-calc(16);
       }
     }
   }
 }
 
+// jquery ui timepicker:
+.ui-timepicker-div .ui-widget-header { margin-bottom: 8px; }
+.ui-timepicker-div dl { text-align: left; }
+.ui-timepicker-div dl dt { float: left; clear:left; padding: 0 0 0 5px; }
+.ui-timepicker-div dl dd { margin: 0 10px 10px 45%; }
+.ui-timepicker-div td { font-size: 90%; }
+.ui-tpicker-grid-label { background: none; border: none; margin: 0; padding: 0; }
+.ui_tpicker_unit_hide { display: none; }
+
+.ui-timepicker-rtl{ direction: rtl; }
+.ui-timepicker-rtl dl { text-align: right; padding: 0 5px 0 0; }
+.ui-timepicker-rtl dl dt{ float: right; clear: right; }
+.ui-timepicker-rtl dl dd { margin: 0 45% 10px 10px; }
