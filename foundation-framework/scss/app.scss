@@ -45,10 +45,36 @@
 //   "foundation/components/offcanvas",
 //   "foundation/components/visibility";
 
-div.main-content {
+#main div.main-content {
 
   $left-gutter-small: rem-calc(4);
   $left-gutter-medium-up: rem-calc(20);
+  $link-color: #5BB9BB;
+  $link-color-darker: scale_color($link-color, $lightness: -18%);
+  $button-color: #F1F1F1;
+  $button-color-darker: scale_color($button-color, $lightness: -10%);
+  $radius: rem-calc(12);
+
+  a {
+    color: $link-color;
+  }
+
+  a:hover {
+    color: $link-color-darker;
+  }
+
+  a.button, input.button {
+    background-color: $button-color;
+    color: #303030;
+    border-radius: $radius;
+    margin-bottom: 0;
+    box-shadow: inset 0px 0px 20px 2px rgba(0, 0, 0, 0.125);
+  }
+
+  a.button:hover, input.button:hover{
+    background-color: $button-color-darker;
+    color: #000000;
+  }
 
   margin-left: auto;
   margin-right: auto;
@@ -63,8 +89,11 @@ div.main-content {
   iframe#spotify-playlist {
     display: block;
     position: absolute;
-    height: 1000px;
-    width: 90%;
+    height: rem-calc(1000);
+    width: 23.13rem;
+    @media #{$medium-up} {
+      width: 35.68rem;
+    }
   }
 
   div#playlist-options {
@@ -77,12 +106,20 @@ div.main-content {
         margin: 0;
       }
       div#options {
-        background: #e8e8e8;
         padding-top: 0;
         ul.inline-list li {
           height: 3.2rem;
         }
+        border: 1px solid $button-color-darker;
+        border-radius: $radius;
+        border-top-left-radius: 0;
       }
+
+      li.accordion-navigation.active a.options {
+        border-bottom-left-radius: 0;
+        border-bottom-right-radius: 0;
+      }
+
     }
   }
 }
