@@ -250,7 +250,10 @@ class TrackSearch(object):
         expected_simple = self.simplified_text(expected_album)
         item_simple = self.simplified_text(album['name'])
         item_year = int(album['release_year'])
-        match_score = int(item_simple == expected_simple) + int(expected_year == item_year)
+        match_score = int(item_simple == expected_simple)
+        if match_score:
+            # Only add points for year match if album title matched.
+            match_score += int(expected_year == item_year)
         img_small = None
         img_med = None
         img_large = None
