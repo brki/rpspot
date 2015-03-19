@@ -79,6 +79,10 @@ class TrackSearch(object):
         self.add_full_album_info(results)
         best_matches = {}
         matches_score = {}
+        # TODO: check if any album_info matches were found.  If not, try to find album via asin.
+        #       If asin album found and title not the same as original album title used in query,
+        #       re-run query with asin album title and asin artists.
+        #       # TODO: update rphistory album title and artists info?
         for item in results:
             track_info = self.extract_track_info(song.title, item)
             artist_info = self.extract_artist_info(artist_name, item['artists'])
@@ -86,6 +90,7 @@ class TrackSearch(object):
             if track_info is None or artist_info is None:
                 # If the artist or track was not found, no need to process this item.
                 continue
+
 
             score = sum(info.match_score for info in [track_info, artist_info, album_info])
             for country in item['available_markets']:

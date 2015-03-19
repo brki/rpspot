@@ -171,7 +171,9 @@ def playlist(request):
     if not form.errors:
         Param.persist_values(params)
 
-    #TODO: validate start_time (in form)
+    # TODO: use foundation form in the template instead of li form
+
+    # TODO: validate start_time (in form)
 
     context = {p.name: p.value for p in params}
     context['form'] = form

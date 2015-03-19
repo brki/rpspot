@@ -93,7 +93,13 @@ class TrackSearchHistory(models.Model):
 
 class HandmappedTrack(models.Model):
     #TODO: add logic to directly map song to track for known track_id
+    # The idea here would be to present a user with:
+    # * the expected album title and song name from radio paradise
+    # * the relevant album info from spotify (for first-matching country?)
+    # * the info from e.g. amazon with album, author(s), song titles
+    # The user could then say, OK, the correct artist(s)/album/song name is ..., and this data can be updated
+    # in the rphistory schema, and map_tracks can be re-run to find country-specific tracks.
     rp_song = models.OneToOneField(Song, related_name="handmapped_track")
-    spotify_track_id = models.CharField(max_length=120, help_text="Spotify track id")
+#    spotify_album_id = models.CharField(max_length=120, help_text="Spotify album id")
     info_url = models.CharField(max_length=255, blank=True, help_text="URL to resource with information about album")
     processed = models.BooleanField(default=False)

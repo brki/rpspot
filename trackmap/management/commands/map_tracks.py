@@ -41,6 +41,11 @@ class Command(BaseCommand):
                 found = True
                 found_count += 1
             else:
+                # TODO: if not found, try harder: (also see TODOs in find_matching_tracks, might be better handled there)
+                # * get album info from asin - if title is different, try with asin title
+                # * if spotify album found matching asin title, but not the track: record in HandmappedTracks,
+                #   it is probably a typo.
+
                 found = False
             if not found:
                 log.info("Not found: {} - {} (album: {}, asin: {})".format(
