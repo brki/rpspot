@@ -69,12 +69,11 @@ class TrackSearch(object):
         #TODO: a fair number of the songs that fail to match fail because the song title is slightly different
         #      between radio paradise and spotify.  It might be worth a second pass that tries to find
         #      a song whose name almost matches on the album, if the album can be matched.
-        artist_name = self.map_artist_name(song.artist.name)
-        query = self.build_query(song.title, artist_name=artist_name)
-        # It's important for the query to have multiple author names separately, but the rest of the code
-        # is expecting a single author name.  This will only happen if the name has been mapped to multiple names.
-        if not isinstance(artist_name, str):
-            artist_name = artist_name.pop()
+
+
+        artist_names = self.map_artist_names(song.artists.all())
+        query = self.build_query(song.title, artist_name=artist_names)
+
         results = self.get_query_results(query)
         self.add_full_album_info(results)
         best_matches = {}
@@ -84,14 +83,18 @@ class TrackSearch(object):
         #       re-run query with asin album title and asin artists.
         #       # TODO: update rphistory album title and artists info?
         for item in results:
+            # If the artist or track are not found, no need to process this item.
             track_info = self.extract_track_info(song.title, item)
-            artist_info = self.extract_artist_info(artist_name, item['artists'])
-            album_info = self.extract_album_info(song.album.title, song.album.release_year, item)
-            if track_info is None or artist_info is None:
-                # If the artist or track was not found, no need to process this item.
+            if track_info is None:
                 continue
 
+            artist_info = self.extract_artist_info(song, artist_names, item['artists'])
+            if artist_info is None:
+                continue
 
+            album_info = self.extract_album_info(song.album.title, song.album.release_year, item)
+
+            # Find the best match per country.
             score = sum(info.match_score for info in [track_info, artist_info, album_info])
             for country in item['available_markets']:
                 previous_score = matches_score.get(country, -1)
@@ -222,33 +225,44 @@ class TrackSearch(object):
         string = string.lower().replace(' & ', ' and ').replace(' + ', ' and ')
         return remove_accents(self.strip_non_words_pattern.sub('', string))
 
-    def extract_artist_info(self, artist, artist_list):
+    def extract_artist_info(self, song, artist_names, artist_list):
         """
-        Find a matching artist. There may be many artists, but we don't care, we just search for ``artist``.
+        Find a matching artist. There may be many artists, if there are then the match_score is proportionally
+        higher according to the number of matched artist names.
 
         Spotify's search api doesn't allow for requiring exact matches, so we try here to do a reasonably
         good job of detecting a matching artist name.
 
-        :param artist: string
+        :param Song song:
+        :param artist_names: array of artist names provided by source
         :param artist_list: array of spotify API album artist results
         :return: ArtistInfo
         """
-        artist_simple = self.simplified_text(artist)
-        artist_alternate = 'the' + artist_simple
-        multiple = len(artist_list) > 1
-        for a in artist_list:
-            a_simple = self.simplified_text(a['name'])
-            a_alternate = 'the' + a_simple
-            if len({artist_simple, artist_alternate, a_simple, a_alternate}) < 4:
-                # At least one of the pairs matched.
-                match_score = int(artist_simple == a_simple)
-                return ArtistInfo(id=a['id'], name=a['name'], multiple=multiple, match_score=match_score)
+        match_score = 0
+        one_artist_matched = False
+
+        for artist in artist_names:
+            artist_simple = self.simplified_text(artist)
+            artist_alternate = 'the' + artist_simple
+            for a in artist_list:
+                a_simple = self.simplified_text(a['name'])
+                a_alternate = 'the' + a_simple
+                if len({artist_simple, artist_alternate, a_simple, a_alternate}) < 4:
+                    one_artist_matched = True
+                    match_score += int(artist_simple == a_simple)
+                    continue
+
+        if one_artist_matched:
+            artist_count = len(artist_list)
+            multiple =  artist_count > 1
+            score = match_score / artist_count
+            return ArtistInfo(id=a['id'], name=a['name'], multiple=multiple, match_score=score)
         else:
-            message = "Artist '{}' not found in list: {}".format(
-                artist, [a['name'] for a in artist_list]
+            message = "Artists '{}' not found in list: {}".format(
+                    artist_names, [a['name'] for a in artist_list]
             )
             log.debug(message)
-        return None
+            return None
 
     def extract_album_info(self, expected_album, expected_year, item):
         album = item['album']
@@ -349,11 +363,11 @@ class TrackSearch(object):
                 obj.full_clean(exclude=clean_exclude, validate_unique=False)
         return obj
 
-    def map_artist_name(self, artist_name):
+    def map_artist_names(self, artists):
         """
         Replace Radio Paradise name with Spotify name for some artists that are named differently by the two services.
-        :param artist_name:
+        :param iterable of Artist objects
         :return: string
         """
         # TODO: should these be managed in the DB?
-        return self.rp_to_spotify_artist_map.get(artist_name, artist_name)
+        return [self.rp_to_spotify_artist_map.get(artist.name, artist.name) for artist in artists]

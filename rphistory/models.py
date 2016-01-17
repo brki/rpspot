@@ -2,10 +2,8 @@ from django.db import models
 
 
 class Artist(models.Model):
-    # TODO: add a song foreign key here, and remove song.artist->artist foreign key.
-    #       This is not how radioparadise provides the info, but model reality closer,
-    #       and reflects the way spotify provides information about tracks/artists/albums
     name = models.CharField(max_length=255, null=False, unique=True)
+    songs = models.ManyToManyField('Song', related_name='artists')
 
     def __str__(self):
         return "<Artist: {}>".format(self.name)
@@ -23,7 +21,6 @@ class Album(models.Model):
 class Song(models.Model):
     title = models.CharField(max_length=255, null=False)
     rp_song_id = models.IntegerField(unique=True, null=False)
-    artist = models.ForeignKey(Artist, related_name='songs')
     album = models.ForeignKey(Album, related_name='songs')
 
     def __str__(self):

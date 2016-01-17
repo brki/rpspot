@@ -20,7 +20,9 @@ from .settings import RP_PLAYLIST_URL, RP_CACHE
 # AsinInfo fields:
 # * asin: Amazon unique id string
 # * title: product title
-AsinInfo = namedtuple('AsinInfo', 'asin title')
+# * authors: array of author names
+# * tracks: array of tracks
+AsinInfo = namedtuple('AsinInfo', 'asin title authors tracks')
 
 # SongInfo fields:
 # time: datetime the song played on Radio Paradise (in UTC time)
@@ -95,7 +97,8 @@ def save_songs_and_history(songs):
                     defaults={'title': album_title, 'release_year': song.album_release_year})
                 artist, _ = Artist.objects.get_or_create(name=song.artist)
                 song_object, _ = Song.objects.get_or_create(
-                    rp_song_id=song.id, defaults={'title': song.title, 'artist': artist, 'album': album})
+                    rp_song_id=song.id, defaults={'title': song.title, 'album': album})
+                song_object.artists.add(artist)
                 History.objects.create(song=song_object, played_at=song.time)
                 loaded += 1
         except IntegrityError as e:
@@ -157,7 +160,7 @@ def get_info_from_asin(asin):
     try:
         page = urlopen(url, timeout=10).read()
     except (HTTPError, URLError, timeout) as err:
-        log.debug("get_info_from_asin: Error opening asin url: {}".format(err))
+        log.warn("get_info_from_asin: Error opening asin url: {}".format(err))
         return None
 
     soup = BeautifulSoup(page)
@@ -165,7 +168,28 @@ def get_info_from_asin(asin):
     try:
         title = soup.find(id='productTitle').string
     except AttributeError as err:
-        log.debug("get_info_from_asin: Unable to get product title: {}".format(err))
+        log.warn("get_info_from_asin: Unable to get product title: {}".format(err))
         return None
 
-    return AsinInfo(asin=asin, title=title)
+    authors = []
+    author_spans = soup.select('span.author')
+    for author in author_spans:
+        try:
+            authors.append(author.a.string)
+        except AttributeError:
+            authors.append(author.string)
+
+    # Try to get tracks from non-mp3 sample tracks listing
+    tracks = [t.string.strip() for t in soup.select('#musicTracksFeature div.content td')]
+    if not tracks:
+        # Try to get tracks from mp3 sample tracks listing
+        tracks = [t.text.strip() for t in soup.select('div#albumTrackList td.titleCol')]
+    if not tracks:
+        # Try to get tracks from singles-style listing
+        tracks = []
+
+
+    if not tracks:
+        tracks = None
+
+    return AsinInfo(asin=asin, title=title, authors=authors, tracks=tracks)

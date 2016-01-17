@@ -26,7 +26,7 @@ class Command(BaseCommand):
         else:
             filter = Q(search_history__isnull=True)
 
-        new_songs = Song.objects.filter(filter).select_related('album', 'artist')
+        new_songs = Song.objects.filter(filter).select_related('album').prefetch_related('artists')
         if limit:
             new_songs = new_songs[:limit]
 
@@ -48,8 +48,9 @@ class Command(BaseCommand):
 
                 found = False
             if not found:
-                log.info("Not found: {} - {} (album: {}, asin: {})".format(
-                    song.artist.name, song.title, song.album.title, song.album.asin))
+                artists = ','.join([artist.name for artist in song.artists.all()])
+                log.info("Not found: [{}] - {} (album: {}, asin: {})".format(
+                    artists, song.title, song.album.title, song.album.asin))
 
             TrackSearchHistory.objects.update_or_create(
                 rp_song=song,
