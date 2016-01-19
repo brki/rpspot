@@ -1,4 +1,4 @@
--e git+https://github.com/django/django.git@44dd65fb2ca8c008a4ca83cd8fdb2d14004f2543#egg=Django-origin/stable/1.8.x
+django==1.9.1
 -e git+https://github.com/brki/spotipy@75d433ad1f3f78b4a55b0fd0061b360b33da6ef1#egg=spotipy-python3-spotipy
 beautifulsoup4==4.3.2
 django-environ==0.3.0

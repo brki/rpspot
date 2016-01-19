@@ -11,7 +11,6 @@ env.read_env(root('.env'))
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env('DEBUG')
-TEMPLATE_DEBUG = DEBUG
 
 DATABASES = {
     'default': env.db(),  # Raises ImproperlyConfigured exception if DATABASE_URL not in os.environ
@@ -62,6 +61,7 @@ ROOT_URLCONF = 'rpspot.urls'
 
 TEMPLATES = [
     {
+        'TEMPLATE_DEBUG': DEBUG,
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [root('templates')],
         'APP_DIRS': True,
