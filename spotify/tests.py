@@ -19,14 +19,12 @@ class SearchTrack(TestCase):
 
     def test_search_track(self):
         s = spotipy.Spotify(auth=client_credentials_token())
-        result = s.search(q='track:Rainy artist:"Bob Dylan"', type='track', market='CH')
+        result = s.search(q='track:Rainy artist:"Bob Dylan"', type='track')
         self.assertGreater(result['tracks']['total'], 1)
-        for item in result['tracks']['items']:
-            self.assertIn('CH', item['available_markets'])
 
     def test_find_track(self):
         result = find_track(
-            artist='Shriekback', track='All Lined Up', album='Natural History', country_code='CH')
+            artist='Shriekback', track='All Lined Up', album='Natural History')
         self.assertIsNotNone(result)
         self.assertIsNotNone(result.id)
         self.assertFalse(result.album_match)

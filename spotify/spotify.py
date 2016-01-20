@@ -40,7 +40,7 @@ def fetch_new_client_credentials_token():
     return result['access_token'], result['token_type'], result['expires_in']
 
 
-def find_track(track, artist=None, album=None, country_code=None):
+def find_track(track, artist=None, album=None):
     """
     Find a spotify track id for the single best-matching track.
 
@@ -49,7 +49,6 @@ def find_track(track, artist=None, album=None, country_code=None):
     :param track: track title (optional)
     :param artist: artist name (optional)
     :param album: album title (optional)
-    :param country_code: uppercase two-letter country code (optional)
     :return: TrackResult if a track found, None otherwise
     """
 
@@ -77,8 +76,6 @@ def find_track(track, artist=None, album=None, country_code=None):
         'q': ' '.join(q),
         'type': 'track',
     }
-    if country_code:
-        kwargs['market'] = country_code
 
     s = spotify()
     results = s.search(**kwargs)
