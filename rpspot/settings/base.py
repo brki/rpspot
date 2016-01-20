@@ -41,8 +41,10 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
     'rphistory',
     'trackmap',
+    'rest'
 )
 
 MIDDLEWARE_CLASSES = (
@@ -61,11 +63,11 @@ ROOT_URLCONF = 'rpspot.urls'
 
 TEMPLATES = [
     {
-        'TEMPLATE_DEBUG': DEBUG,
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [root('templates')],
         'APP_DIRS': True,
         'OPTIONS': {
+            'debug': DEBUG,
             'context_processors': [
                 'django.template.context_processors.debug',
                 'django.template.context_processors.request',
@@ -109,6 +111,10 @@ CACHES = {
         'LOCATION': root('fs_cache', 'trackmap_cache')
 
     },
+}
+
+REST_FRAMEWORK = {
+    'PAGE_SIZE': 100,
 }
 
 SESSION_ENGINE = 'django.contrib.sessions.backends.file'
