@@ -370,4 +370,12 @@ class TrackSearch(object):
         :return: string
         """
         # TODO: should these be managed in the DB?
-        return [self.rp_to_spotify_artist_map.get(artist.name, artist.name) for artist in artists]
+        mapped_artists = []
+        for artist in artists:
+            mapped = self.rp_to_spotify_artist_map.get(artist.name, artist.name)
+            if isinstance(mapped, list):
+                mapped_artists += mapped
+            else:
+                mapped_artists.append(mapped)
+
+        return mapped_artists
