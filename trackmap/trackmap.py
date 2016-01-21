@@ -49,7 +49,8 @@ class TrackSearch(object):
         'English Beat': 'The Beat',
         'Allman Brothers': 'The Allman Brothers Band',
         'Trail of Dead': '...And You Will Know Us By The Trail Of Dead',
-        'Robert Plant & Alison Krauss': ['Robert Plant', 'Alison Krauss']
+        'Robert Plant & Alison Krauss': ['Robert Plant', 'Alison Krauss'],
+        'Sonny Boy Williamson': 'Sonny Boy Williamson II',
     }
 
     def __init__(self, query_limit=40, max_items_to_process=200):

@@ -12,7 +12,7 @@ def history(time_start, time_end, country):
     """
 
     sql = """
-    SELECT h.played_at, s.title, artist.name as artist_name, album.title as album_title, track.id AS spotify_track_id,
+    SELECT h.played_at, s.title, artist.name as artist_name, album.title as album_title, track.spotify_id AS spotify_track_id,
            spot_album.img_small_url AS spotify_album_img_small_url, spot_album.img_large_url AS spotify_album_img_large_url
      FROM rphistory_history h
      JOIN rphistory_song s ON h.song_id = s.id
