@@ -1,6 +1,7 @@
 from collections import namedtuple
 from datetime import datetime
 from logging import getLogger
+import zlib
 from pytz import utc
 from socket import timeout
 from urllib.request import Request, urlopen
@@ -155,10 +156,19 @@ def get_response_if_modified(url, etag=None):
 def get_info_from_asin(asin):
     if not asin:
         return None
+
     # alternative: url = "http://www.amazon.com/exec/obidos/ASIN/{}".format(asin)
     url = "http://www.amazon.com/exec/obidos/tg/detail/-/{}".format(asin)
+    request = Request(url)
+    request.headers['User-agent'] = 'Chrome/47.0.2526.111'
+
     try:
-        page = urlopen(url, timeout=10).read()
+        response = urlopen(request, timeout=10)
+        data = response.read()
+        if response.getheader('Content-Encoding') == 'gzip':
+            page = zlib.decompress(data, 16+zlib.MAX_WBITS)
+        else:
+            page = data
     except (HTTPError, URLError, timeout) as err:
         log.warn("get_info_from_asin: Error opening asin url: {}".format(err))
         return None
