@@ -5,11 +5,7 @@ import rest.urls
 
 
 urlpatterns = [
-    # Examples:
-    # url(r'^$', 'rpspot.views.home', name='home'),
-    # url(r'^blog/', include('blog.urls')),
-
-    url(r'^admin/', include(admin.site.urls)),
+    # url(r'^admin/', include(admin.site.urls)),
     url(r'^rest/', include(rest.urls)),
-    url(r'^spotify-playlist/radio-paradise/$', playlist, name='playlist')
+    url(r'^spotify-playlist/radio-paradise/$', playlist, name='playlist'),
 ]
