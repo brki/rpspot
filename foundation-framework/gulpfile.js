@@ -25,7 +25,7 @@ var paths = {
     'stylesheets': [
         'css_out/app.css',
         'css_out/normalize.css',
-        'jquery-ui-1.11.4.custom/jquery-ui.css'
+        'vendor/jquery-ui-1.11.4.custom/jquery-ui.css'
      ]
   },
   ui_images: {
