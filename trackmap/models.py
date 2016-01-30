@@ -77,7 +77,7 @@ class TrackAvailabilityManager(models.Manager):
 class TrackAvailability(models.Model):
     track = models.ForeignKey(Track)
     rp_song = models.ForeignKey(Song, related_name="available_tracks")
-    country = models.CharField(max_length=2)
+    country = models.CharField(max_length=2, db_index=True)
     score = models.IntegerField(default=0)
     objects = TrackAvailabilityManager()
 
