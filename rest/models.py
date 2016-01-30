@@ -11,6 +11,8 @@ def history(time_start, time_end, country):
     :return: json string with array of results
     """
 
+    # TODO cache with a key "country + time_start (minute precision) + time_end (minute precision)"
+
     sql = """
     SELECT h.played_at, s.title, artist.name as artist_name, album.title as album_title, track.spotify_id AS spotify_track_id,
            spot_album.img_small_url AS spotify_album_img_small_url, spot_album.img_large_url AS spotify_album_img_large_url
@@ -35,3 +37,10 @@ def history(time_start, time_end, country):
     cursor.execute(json_sql, params)
     result = cursor.fetchone()[0]
     return result or '[]'
+
+
+def last_24_hours(country):
+    pass
+    # TODO call history, cache the result.
+    # Update caller of history() to use this method when appropriate.
+    # Invalidate cache when new song arrives.
