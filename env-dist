@@ -26,8 +26,8 @@ REQUEST_LOG_LEVEL='WARN'
 
 
 # Path to top-level filesystem cache directory
-FS_CACHE_PATH='/tmp/rpspot/fs_cache'
+FS_CACHE_PATH=/tmp/rpspot/fs_cache
 
 # Path to public root.
 # The STATIC_ROOT directory will be inside the public root directory, according to the base settings configuration file.
-PUBLIC_ROOT_PATH='/tmp/rpspot/public'
+PUBLIC_ROOT_PATH=/tmp/rpspot/public
