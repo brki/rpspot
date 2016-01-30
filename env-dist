@@ -1,14 +1,21 @@
 # Rename this file to .env, and set reasonable values.
+
 DEBUG=off
+
 # DJANGO_SETTINGS_MODULE is checked for by manage.py to determine env to use.  Actual env variables will override it.
 # e.g.  ``DJANGO_SETTINGS_MODULE=rpspot.settings.dev_local ./manage.py runserver`` would override the value set in this file.
 # If this value is not present, it will default to rpspot.settings.dev (default value set in manage.py)
 DJANGO_SETTINGS_MODULE=rpspot.settings.dev
+
 SECRET_KEY=a long secret key
+
 DATABASE_URL=postgres://user:pass@host_or_ip:5432/dbname
+
 SPOTIFY_CLIENT_ID=client_id
 SPOTIFY_CLIENT_SECRET=client_secret
+
 GEOIP_PATH=/path/to/geoip/datafile/dir
+
 LOG_DIR=/absolute/or/relative/path/to/log/dir
 
 # optional settings below:
@@ -17,3 +24,10 @@ RPHISTORY_LOG_LEVEL='DEBUG'
 TRACKMAP_LOG_LEVEL='INFO'
 REQUEST_LOG_LEVEL='WARN'
 
+
+# Path to top-level filesystem cache directory
+FS_CACHE_PATH='/tmp/rpspot/fs_cache'
+
+# Path to public root.
+# The STATIC_ROOT directory will be inside the public root directory, according to the base settings configuration file.
+PUBLIC_ROOT_PATH='/tmp/rpspot/public'

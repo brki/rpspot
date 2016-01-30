@@ -6,22 +6,37 @@ root = environ.Path(__file__) - 3
 env = environ.Env(
     DEBUG=(bool, False),
     ALLOWED_HOSTS=(list, []),
+    PUBLIC_ROOT_PATH=(str, None),
+    FS_CACHE_PATH=(str, None),
 )
 env.read_env(root('.env'))
 
-# SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env('DEBUG')
+
+public_root_str = env('PUBLIC_ROOT_PATH')
+if public_root_str:
+    PUBLIC_ROOT = environ.Path(public_root_str)
+else:
+    PUBLIC_ROOT = root.path('public/')
+
+fs_cache_str = env('FS_CACHE_PATH')
+if fs_cache_str:
+    FS_CACHE_ROOT = environ.Path(fs_cache_str)
+else:
+    FS_CACHE_ROOT = root.path('fs_cache/')
+
+LOG_DIR = env.str('LOG_DIR')
 
 DATABASES = {
     'default': env.db(),  # Raises ImproperlyConfigured exception if DATABASE_URL not in os.environ
 }
 
-public_root = root.path('public/')
-MEDIA_ROOT = public_root('media')
+
+MEDIA_ROOT = PUBLIC_ROOT('media')
 MEDIA_URL = 'media/'
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/dev/howto/static-files/
-STATIC_ROOT = public_root('static')
+STATIC_ROOT = PUBLIC_ROOT('static')
 STATIC_URL = '/static/'
 STATICFILES_DIRS = (
     root('static'),
@@ -98,16 +113,16 @@ INTERNAL_IPS = tuple(env.list('INTERNAL_IPS', None, ['127.0.0.1']))
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
-        'LOCATION': root('fs_cache', 'cache')
+        'LOCATION': FS_CACHE_ROOT('cache')
     },
     'rphistory': {
         'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
-        'LOCATION': root('fs_cache', 'rphistory_cache')
+        'LOCATION': FS_CACHE_ROOT('rphistory_cache')
 
     },
     'trackmap': {
         'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
-        'LOCATION': root('fs_cache', 'trackmap_cache')
+        'LOCATION': FS_CACHE_ROOT('trackmap_cache')
 
     },
 }
@@ -130,7 +145,6 @@ GEOIP_PATH = env.str('GEOIP_PATH')
 TRACKMAP_LOG_LEVEL = env.str('TRACKMAP_LOG_LEVEL', None)
 RPHISTORY_LOG_LEVEL = env.str('RPHISTORY_LOG_LEVEL', None)
 REQUEST_LOG_LEVEL = env.str('REQUEST_LOG_LEVEL', None)
-LOG_DIR = env.str('LOG_DIR')
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': True,
