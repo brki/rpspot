@@ -6,7 +6,7 @@ from trackmap.settings import (
 
 
 def country_choices():
-    markets = TrackAvailability.objects.all_markets(force_cache_refresh=True)
+    markets = TrackAvailability.objects.all_markets(force_cache_refresh=False)
     choices = tuple([(market, COUNTRY_CODES[market]) for market in markets])
     return sorted(choices, key=lambda c: c[1])
 
