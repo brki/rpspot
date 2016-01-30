@@ -7,7 +7,6 @@ from dateutil.parser import parse
 from ipware.ip import get_real_ip
 import pytz
 from trackmap.models import Track
-from trackmap.forms import PlaylistOptions
 from trackmap.settings import (
     TRACKMAP_SESSION_EXPIRY, TRACKMAP_SESSION_RENEW_WHEN_SECONDS_LEFT, TRACKMAP_DEFAULT_COUNTRY,
     TRACKMAP_DEFAULT_TIMEZONE, TRACKMAP_DEFAULT_TRACK_LIMIT,
@@ -152,6 +151,7 @@ class Param(object):
 
 
 def playlist(request):
+    from trackmap.forms import PlaylistOptions
     template_name = "trackmap/playlist.html"
 
     keep_session_alive(request.session)
