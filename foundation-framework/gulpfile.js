@@ -30,7 +30,7 @@ var paths = {
   },
   ui_images: {
       'stylesheets/images': [
-        'jquery-ui-1.11.4.custom/images/*'
+        'vendor/jquery-ui-1.11.4.custom/images/*'
       ]
   }
 };
