@@ -14,7 +14,8 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument('--limit', dest='limit', nargs='?', type=int, default=0,
-                            help='Only process <limit> new Radio Paradise songs')
+                            help='Only process <limit> new Radio Paradise songs.  Use a negative value to process the'
+                                 ' newest songs (e.g. --limit -10 to process the latest 10 songs)')
         parser.add_argument('--failed', dest='failed', action='store_true', default=False,
                             help='Re-process songs for which no match was found')
         parser.add_argument('--songid', dest='rp_song_id', nargs='?', type=int, default=None,
@@ -34,6 +35,10 @@ class Command(BaseCommand):
 
         new_songs = Song.objects.filter(filter).select_related('album').prefetch_related('artists')
         if limit:
+            # If a negative value given, work back from the latest entries.
+            if limit < 0:
+                new_songs = new_songs.order_by('-search_history__id')
+                limit *= -1
             new_songs = new_songs[:limit]
 
         now = utc_now()
