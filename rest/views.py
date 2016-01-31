@@ -24,7 +24,7 @@ def history(request, country, start_time=None, end_time=None):
     return Response(data)
 
 def extract_datetime_param(request, param_name):
-    time = request.query_params.get('start_time', None)
+    time = request.query_params.get(param_name, None)
     if time is None:
         return None
 
@@ -33,7 +33,7 @@ def extract_datetime_param(request, param_name):
         raise ParseError("Unable to extract datetime value from {} parameter".format(param_name))
 
     if parsed.tzinfo is None or parsed.tzinfo.utcoffset(parsed) is None:
-        message = "The {} parameter should be specified with a timezone, for example 2016-01-20T16:08:07+02:00"
+        message = "The {} parameter should be specified with a timezone and URL encoded, for example 2016-01-20T16:08:07%2B02:00"
         raise ParseError(message.format(param_name))
 
     return parsed
