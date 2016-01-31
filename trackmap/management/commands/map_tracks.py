@@ -17,14 +17,20 @@ class Command(BaseCommand):
                             help='Only process <limit> new Radio Paradise songs')
         parser.add_argument('--failed', dest='failed', action='store_true', default=False,
                             help='Re-process songs for which no match was found')
+        parser.add_argument('--songid', dest='rp_song_id', nargs='?', type=int, default=None,
+                            help='Only process the given radio paradise song id (Song.rp_song_id value)')
 
     def handle(self, *args, **options):
 
         limit = options['limit']
+        song_id = options['rp_song_id']
         if options['failed']:
             filter = Q(search_history__found=False)
         else:
             filter = Q(search_history__isnull=True)
+
+        if song_id is not None:
+            filter = filter & Q(rp_song_id=song_id)
 
         new_songs = Song.objects.filter(filter).select_related('album').prefetch_related('artists')
         if limit:
