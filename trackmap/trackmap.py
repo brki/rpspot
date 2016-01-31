@@ -300,8 +300,8 @@ class TrackSearch(object):
 
         track_match = track_simple == item_track_simple
         if not track_match:
-            # Accept things like "song name 2004 remaster":
-            regex = r"^" + track_simple + r"(\d{4})?((digital)?(remaster(ed)?))?"
+            # Accept things like "the <song name> 2004 remaster":
+            regex = r"^(the)?" + track_simple + r"(\d{4})?((digital)?(remaster(ed)?))?"
             track_match = re.match(regex, item_track_simple)
         if track_match:
             return TrackInfo(id=item['id'], title=item['name'], match_score=1)
