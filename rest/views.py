@@ -19,6 +19,8 @@ def history(request, country, start_time=None, end_time=None):
 
     start, end = day_period(start_time, end_time)
     data = json_history(start, end, country)
+    response = Response(data)
+    response['Content-Length'] = len(data)
     return Response(data)
 
 def extract_datetime_param(request, param_name):
