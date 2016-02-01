@@ -52,6 +52,8 @@ class TrackSearch(object):
         'Trail of Dead': '...And You Will Know Us By The Trail Of Dead',
         'Robert Plant & Alison Krauss': ['Robert Plant', 'Alison Krauss'],
         'Sonny Boy Williamson': 'Sonny Boy Williamson II',
+        'Oliver Mtukudzi': ['Oliver Mtukudzi', 'Oliver Mtukudzi and The Black Spirits'],
+        'Ryan Adams': ['Ryan Adams', 'Ryan Adams & The Cardinals'],
     }
 
     strip_chars_pattern = re.compile('[{}]'.format(re.escape(string.punctuation + ' ')))
