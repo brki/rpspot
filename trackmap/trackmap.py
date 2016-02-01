@@ -54,7 +54,7 @@ class TrackSearch(object):
         'Sonny Boy Williamson': 'Sonny Boy Williamson II',
         'Oliver Mtukudzi': ['Oliver Mtukudzi', 'Oliver Mtukudzi and The Black Spirits'],
         'Ryan Adams': ['Ryan Adams', 'Ryan Adams & The Cardinals'],
-        'Afrocelts': 'Afro Celt Sound System',
+        'AfroCelts': 'Afro Celt Sound System',
         'Albert King & Stevie Ray Vaughan': ['Albert King', 'Stevie Ray Vaughan'],
         'Ali Farka Touré & Ry Cooder': ['Ali Farka Touré', 'Ry Cooder'],
         'Ali Farka Touré & Toumani Diabeté': ['Ali Farka Touré', 'Toumani Diabeté'],
