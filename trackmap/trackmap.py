@@ -2,6 +2,7 @@ from collections import namedtuple
 import logging
 from operator import itemgetter
 import re
+import string
 import unicodedata
 
 from django.db import transaction
@@ -52,6 +53,8 @@ class TrackSearch(object):
         'Robert Plant & Alison Krauss': ['Robert Plant', 'Alison Krauss'],
         'Sonny Boy Williamson': 'Sonny Boy Williamson II',
     }
+
+    strip_chars_pattern = re.compile('[{}]'.format(re.escape(string.punctuation + ' ')))
 
     def __init__(self, query_limit=40, max_items_to_process=200):
         self.spotify = spotify()
@@ -224,7 +227,8 @@ class TrackSearch(object):
 
     def simplified_text(self, string):
         string = string.lower().replace(' & ', ' and ').replace(' + ', ' and ')
-        return remove_accents(self.strip_non_words_pattern.sub('', string))
+        string = remove_accents(self.strip_non_words_pattern.sub('', string))
+        return re.sub(self.strip_chars_pattern, '', string)
 
     def extract_artist_info(self, song, artist_names, artist_list):
         """
