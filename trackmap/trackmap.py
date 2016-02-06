@@ -185,15 +185,18 @@ class TrackSearch(object):
         :param album_title:
         :return: query string
         """
-        q = ['track:"{}"'.format(track_title)]
+        search_track = self.prepare_text_for_search(track_title)
+
+        q = ['track:"{}"'.format(search_track)]
         if artist_name:
             if isinstance(artist_name, str):
-                q.append('artist:"{}"'.format(artist_name))
-            else:
-                for name in artist_name:
-                    q.append('artist:"{}"'.format(name))
+                artist_name = [artist_name]
+            for name in artist_name:
+                search_artist = self.prepare_text_for_search(name)
+                q.append('artist:"{}"'.format(search_artist))
         if album_title:
-            q.append('album:"{}"'.format(album_title))
+            search_album = self.prepare_text_for_search(album_title)
+            q.append('album:"{}"'.format(search_album))
         return ' '.join(q)
 
     def get_query_results(self, query, limit=None, max_items=None):
@@ -251,11 +254,6 @@ class TrackSearch(object):
 
         for item in items:
             item['album'] = album_info[item['album']['id']]
-
-    def simplified_text(self, string):
-        string = string.lower().replace(' & ', ' and ').replace(' + ', ' and ')
-        string = remove_accents(self.strip_non_words_pattern.sub('', string))
-        return re.sub(self.strip_chars_pattern, '', string)
 
     def extract_artist_info(self, song, artist_names, artist_list):
         """
@@ -411,3 +409,38 @@ class TrackSearch(object):
                 mapped_artists.append(mapped)
 
         return mapped_artists
+
+    def simplified_text(self, string):
+        string = string.lower().replace(' & ', ' and ').replace(' + ', ' and ')
+        string = self.remove_leading_article(string)
+        string = remove_accents(self.strip_non_words_pattern.sub('', string))
+        return re.sub(self.strip_chars_pattern, '', string)
+
+    def prepare_text_for_search(self, text):
+        """
+        Remove accents and remove leading 'a ' or 'the '.
+        """
+        if text is None:
+            return None
+
+        plain_text = remove_accents(text).strip().lower()
+        return self.remove_leading_article(plain_text)
+
+    def remove_leading_article(self, text):
+        """
+        Remove a leading 'a ' or 'the ', but only if the remaining string is at least 3 characters long.
+
+        :param str text:
+        :return: str
+        """
+        if text.startswith('a '):
+            stripped_text = text[2:]
+        elif text.startswith('the '):
+            stripped_text = text[4:]
+        else:
+            return text
+
+        if len(stripped_text) < 3:
+            return text
+
+        return stripped_text
