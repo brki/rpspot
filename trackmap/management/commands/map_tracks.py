@@ -13,7 +13,7 @@ class Command(BaseCommand):
     help = 'Maps new Radio Paradise playlist songs to Spotify tracks'
 
     def add_arguments(self, parser):
-        parser.add_argument('--limit', dest='limit', nargs='?', type=int, default=0,
+        parser.add_argument('--limit', dest='limit', nargs='?', type=int, default=None,
                             help='Only process <limit> new Radio Paradise songs.  Use a negative value to process the'
                                  ' newest songs (e.g. --limit -10 to process the latest 10 songs)')
         parser.add_argument('--failed', dest='failed', action='store_true', default=False,
@@ -34,16 +34,48 @@ class Command(BaseCommand):
                                  'references, too ' '(album information will not be deleted unless no other tracks '
                                  'refer to the album).  Note that it is necessary to also use the --force argument '
                                  'if you want to reprocess the song(s) even if they have already been mapped.')
+        parser.add_argument('--slice', dest='slice_string', nargs='?', type=str, default=None,
+                            help='Slice the resulting Song queryset, e.g. --slice 10:20 would only process items '
+                                 '10 - 19 of the queryset that selects the songs to process')
 
     def handle(self, *args, **options):
 
         limit = options['limit']
+        slice_string = options['slice_string']
         song_id = options['rp_song_id']
         artist_id = options['artist_id']
         delete_all_references = options['delete_all_references']
         force = options['force']
-        filters = []
 
+        if limit is not None and slice_string is not None:
+            raise ValueError("Only one of --limit or --slice can be used.")
+
+        slice_tuple = None
+        order_by = 'search_history__id'
+        if slice_string is not None:
+            try:
+                lower_string, higher_string = slice_string.split(':')
+                lower = int(lower_string)
+                higher = int(higher_string)
+            except:
+                raise ValueError("Value provided for --slice could not be parsed, expecting something like 10:15")
+
+            if lower >= higher:
+                raise ValueError("--slice value must be in form of <lower_number>:<higher_number>, for example 10:15")
+
+            if lower < 0:
+                raise ValueError("--slice does not except negative numbers")
+
+            slice_tuple = (lower, higher)
+        elif limit is not None:
+            # If a negative value given, work back from the latest entries.
+            if limit < 0:
+                order_by = '-' + order_by
+                slice_tuple = (None, -1 * limit)
+            else:
+                slice_tuple = (None, limit)
+
+        filters = []
         if not force:
             if options['failed']:
                 filters.append(Q(search_history__found=False))
@@ -56,13 +88,11 @@ class Command(BaseCommand):
         if artist_id is not None:
             filters.append(Q(artists__id=artist_id))
 
-        new_songs = Song.objects.filter(*filters).select_related('album').prefetch_related('artists')
-        if limit:
-            # If a negative value given, work back from the latest entries.
-            if limit < 0:
-                new_songs = new_songs.order_by('-search_history__id')
-                limit *= -1
-            new_songs = new_songs[:limit]
+        new_songs = Song.objects.filter(*filters).select_related('album').prefetch_related('artists').order_by(order_by)
+
+        if slice_tuple is not None:
+            start, stop = slice_tuple
+            new_songs = new_songs[start:stop]
 
         now = utc_now()
         track_search = TrackSearch()
