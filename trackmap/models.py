@@ -1,6 +1,10 @@
+from logging import getLogger, DEBUG
 from django.db import models
 from rphistory.models import Song, History
 from trackmap import trackmap_cache
+
+
+log = getLogger(__name__)
 
 
 class Album(models.Model):
@@ -9,6 +13,9 @@ class Album(models.Model):
     img_small_url = models.URLField(null=True)
     img_medium_url = models.URLField(null=True)
     img_large_url = models.URLField(null=True)
+
+    def __str__(self):
+        return "<Album>: {} (spotify_id: {}) (id: {})".format(self.title, self.spotify_id, self.id)
 
 
 class TrackManager(models.Manager):
@@ -59,6 +66,10 @@ class Track(models.Model):
     many_artists = models.BooleanField(default=False)
     objects = TrackManager()
 
+    def __str__(self):
+        return "<Track>: {} (artist: {}) (spotify_id: {}) (id: {})".format(
+            self.title, self.artist, self.spotify_id, self.id)
+
 
 class TrackAvailabilityManager(models.Manager):
     def all_markets(self, force_cache_refresh=False):
@@ -69,7 +80,7 @@ class TrackAvailabilityManager(models.Manager):
             if countries:
                 return countries
 
-        countries =  self.values_list('country', flat=True).distinct('country').order_by('country')
+        countries = self.values_list('country', flat=True).distinct('country').order_by('country')
         cache.set(cache_key, countries, 60*60*24)
         return countries
 
@@ -84,11 +95,19 @@ class TrackAvailability(models.Model):
     class Meta:
         unique_together = (('track', 'rp_song', 'country'),)
 
+    def __str__(self):
+        return "<TrackAvailability>: {} (rp_song_id: {}) (score: {}) (id: {})".format(
+            self.country, self.rp_song_id, self.score, self.id)
+
 
 class TrackSearchHistory(models.Model):
     rp_song = models.OneToOneField(Song, related_name="search_history")
     search_time = models.DateTimeField(null=False)
     found = models.BooleanField(default=False)
+
+    def __str__(self):
+        return "<TrackSearchHistory>: {} (rp_song_id: {}) (found: {}) (id: {})".format(
+            self.search_time, self.rp_song_id, self.found, self.id)
 
 
 class HandmappedTrack(models.Model):
@@ -103,3 +122,37 @@ class HandmappedTrack(models.Model):
 #    spotify_album_id = models.CharField(max_length=120, help_text="Spotify album id")
     info_url = models.CharField(max_length=255, blank=True, help_text="URL to resource with information about album")
     processed = models.BooleanField(default=False)
+
+    def __str__(self):
+        return "<HandmappedTrack>: {} (rp_song_id: {}) (processed: {}) (id: {})".format(
+            self.info_url, self.rp_song_id, self.processed, self.id)
+
+
+def delete_references_to_rp_history_song(song_id):
+    #handmapped_tracks_qs = HandmappedTrack.objects.filter(rp_song_id=song_id)
+    #if log.isEnabledFor(DEBUG)
+    #    for o in handmapped_tracks_qs:
+    #        log.debug("Deleting object: {}".format(o))
+    #handmapped_tracks_qs.delete()
+
+    track_search_history_qs = TrackSearchHistory.objects.filter(rp_song_id=song_id)
+    if log.isEnabledFor(DEBUG):
+        for o in track_search_history_qs:
+            log.debug("Deleting object: {}".format(o))
+    track_search_history_qs.delete()
+
+    track_qs = Track.objects.filter(trackavailability__rp_song_id=song_id).distinct()
+    albums = list(Album.objects.filter(track__in=track_qs))
+
+    # Deleting Track objects will cascade the deletions to related TrackAvailability objects.
+    if log.isEnabledFor(DEBUG):
+        for o in track_qs:
+            log.debug("Deleting object (and related TrackAvailability objects): {}".format(o))
+    track_qs.delete()
+
+    # If any of the albums no longer have any matching tracks, delete them.
+    for album in albums:
+        if Track.objects.filter(album=album).count() == 0:
+            if log.isEnabledFor(DEBUG):
+                log.debug("Deleting album because it no longer has any associated tracks: {}".format(album))
+            album.delete()

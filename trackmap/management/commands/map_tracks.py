@@ -1,7 +1,7 @@
 from django.core.management.base import BaseCommand
 from django.db.models import Q
 from rphistory.models import Song
-from trackmap.models import TrackSearchHistory
+from trackmap.models import TrackSearchHistory, delete_references_to_rp_history_song
 from trackmap.trackmap import TrackSearch, utc_now
 from logging import getLogger
 
@@ -23,14 +23,28 @@ class Command(BaseCommand):
                                  'the updated list of countries where the song is available)')
         parser.add_argument('--songid', dest='rp_song_id', nargs='?', type=int, default=None,
                             help='Only process the given radio paradise song id (Song.rp_song_id value)')
+        parser.add_argument('--artistid', dest='artist_id', nargs='?', type=int, default=None,
+                            help='Process all songs by the artist (Artist.id)')
+        parser.add_argument('--delete-all-references-first', action='store_true', dest='delete_all_references',
+                            default=False,
+                            help='Delete all Trackmap references to song.  While processing a song '
+                                 'with --force will remove all country-specific track availability '
+                                 'mappings before creating the new mappings, it will not remove the track '
+                                 'information or the album ' 'information.  Using this option will remove these '
+                                 'references, too ' '(album information will not be deleted unless no other tracks '
+                                 'refer to the album).  Note that it is necessary to also use the --force argument '
+                                 'if you want to reprocess the song(s) even if they have already been mapped.')
 
     def handle(self, *args, **options):
 
         limit = options['limit']
         song_id = options['rp_song_id']
+        artist_id = options['artist_id']
+        delete_all_references = options['delete_all_references']
+        force = options['force']
         filters = []
 
-        if not options['force']:
+        if not force:
             if options['failed']:
                 filters.append(Q(search_history__found=False))
             else:
@@ -38,6 +52,9 @@ class Command(BaseCommand):
 
         if song_id is not None:
                 filters.append(Q(rp_song_id=song_id))
+
+        if artist_id is not None:
+            filters.append(Q(artists__id=artist_id))
 
         new_songs = Song.objects.filter(*filters).select_related('album').prefetch_related('artists')
         if limit:
@@ -51,6 +68,9 @@ class Command(BaseCommand):
         track_search = TrackSearch()
         found_count = 0
         for song in new_songs:
+            if delete_all_references:
+                delete_references_to_rp_history_song(song.id)
+
             matches, scores = track_search.find_matching_tracks(song)
             if matches:
                 track_availabilities = track_search.create_tracks(song, matches, scores)
@@ -73,5 +93,6 @@ class Command(BaseCommand):
                 rp_song=song,
                 defaults={'search_time': now, 'found': found}
             )
+
         self.stdout.write("Processed {} songs.  Matching Spotify tracks found for {} of these songs.".format(
             len(new_songs), found_count))
