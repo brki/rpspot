@@ -15,7 +15,7 @@ from trackmap.models import Album, Track, TrackAvailability
 
 AlbumInfo = namedtuple('AlbumInfo', 'id title year img_small img_medium img_large match_score')
 ArtistInfo = namedtuple('ArtistInfo', 'id name multiple match_score')
-TrackInfo = namedtuple('ArtistInfo', 'id title match_score')
+TrackInfo = namedtuple('TrackInfo', 'id title match_score')
 TrackArtistAlbum = namedtuple('TrackArtistAlbum', 'track_info artist_info album_info')
 
 
@@ -44,45 +44,69 @@ def chunks(l, n):
 
 class TrackSearch(object):
 
+    # There are three cases a radioparadise artist name to be mapped to multiple spotify artist names:
+    #       1. For example "Albert King & Stevie Ray Vaughan":  These are two artists playing together on one song
+    #       2. For example 'Raymond Kane': ['Raymond Kane', 'Ray Kane']: This is one artist who has works attributed
+    #          to them on Spotify under more than one name.
+    #       3. Radio Paradise uses one name, Spotify uses another (e.g. 'Bob Marley': 'Bob Marley & The Wailers')
+    #  These cases should be handled differently:
+    #  For 1), the artist part of the query should include all the artists
+    #  For 2), the artist names should be queried using OR.  If there are more than two mappings,
+    #          this would mean making more than one query if the first query didn't find a good match.
+    #  For 3), the Spotify version of the artist's name should be used in the query.
+    MAPPING_TYPE_REPLACE = 'replace_single'
+    MAPPING_TYPE_ONE_TO_MANY = 'one_to_many'
+    MAPPING_TYPE_ANY_OF = 'any_of'
     rp_to_spotify_artist_map = {
-        'Bob Marley': 'Bob Marley & The Wailers',
-        'The English Beat': 'The Beat',
-        'English Beat': 'The Beat',
-        'Allman Brothers': 'The Allman Brothers Band',
-        'Trail of Dead': '...And You Will Know Us By The Trail Of Dead',
-        'Robert Plant & Alison Krauss': ['Robert Plant', 'Alison Krauss'],
-        'Sonny Boy Williamson': 'Sonny Boy Williamson II',
-        'Oliver Mtukudzi': ['Oliver Mtukudzi', 'Oliver Mtukudzi and The Black Spirits'],
-        'Ryan Adams': ['Ryan Adams', 'Ryan Adams & The Cardinals'],
-        'AfroCelts': 'Afro Celt Sound System',
-        'Albert King & Stevie Ray Vaughan': ['Albert King', 'Stevie Ray Vaughan'],
-        'Ali Farka Touré & Ry Cooder': ['Ali Farka Touré', 'Ry Cooder'],
-        'Ali Farka Touré & Toumani Diabeté': ['Ali Farka Touré', 'Toumani Diabeté'],
-        'Angélique Kidjo': 'Angelique Kidjo',
-        'BÃ©la Fleck': ['Béla Fleck', 'Béla Fleck and the Flecktones'],
-        'Béla Fleck': ['Béla Fleck', 'Béla Fleck and the Flecktones'],
-        'B.B. King & Dr. John': ['B.B. King', 'Dr. John'],
-        'B.B. King & Mick Hucknall': ['B.B. King', 'Mick Hucknall'],
-        'B.B. King & Tracy Chapman': ['B.B. King', 'Tracy Chapman'],
-        'Ben Harper': ['Ben Harper', 'Ben Harper And Relentless7'],
-        'Ben Harper & the Blind Boys of Alabama': ['Ben Harper', 'The Blind Boys of Alabama'],
-        'Beth Hart and Joe Bonamassa': ['Beth Hart', 'Joe Bonamassa'],
-        'Beth Hart & Joe Bonamassa': ['Beth Hart', 'Joe Bonamassa'],
-        'Billy Bragg & Wilco': ['Billy Bragg', 'Wilco'],
-        'Bloomfield, Kooper, Stills': ['Al Kooper', 'Steve Stills', 'Bloomfield'],
-        'Damon Albarn & Friends': ['Damon Albarn', 'Malian Musicians'],
-        'Danger Mouse & Daniele Luppi': ['Danger Mouse', 'Daniele Luppi'],
-        'Danger Mouse & Sparklehorse': ['Danger Mouse', 'Sparklehorse'],
-        'Dave Matthews & Tim Reynolds': ['Dave Matthews', 'Tim Reynolds'],
-        'David Byrne and Brian Eno': ['David Byrne', 'Brian Eno'],
-        'David Tiller & Enion Pelta': ['David Tiller', 'Enion Pelta'],
-        'Edie Brickell': 'Edie Brickell & New Bohemians',
-        'Ella Fitzgerald & Joe Pass': ['Ella Fitzgerald', 'Joe Pass'],
-        'Elvis Costello': ['Elvis Costello', 'Elvis Costello & The Attractions'],
-        'Sixteen Horsepower': '16 Horsepower',
-        'Habib Koité & Bamada': ['Habib Koité', 'Bamada'],
-        'Leftover Salmon & Cracker': ['Leftover Salmon', 'Cracker'],
+        MAPPING_TYPE_REPLACE: {
+            'Bob Marley': 'Bob Marley & The Wailers',
+            'The English Beat': 'The Beat',
+            'English Beat': 'The Beat',
+            'Allman Brothers': 'The Allman Brothers Band',
+            'Trail of Dead': '...And You Will Know Us By The Trail Of Dead',
+            'Sonny Boy Williamson': 'Sonny Boy Williamson II',
+            'AfroCelts': 'Afro Celt Sound System',
+            'Angélique Kidjo': 'Angelique Kidjo',
+            'Edie Brickell': 'Edie Brickell & New Bohemians',
+            'Sixteen Horsepower': '16 Horsepower',
+        },
+        MAPPING_TYPE_ONE_TO_MANY: {
+            'Robert Plant & Alison Krauss': ['Robert Plant', 'Alison Krauss'],
+            'Ali Farka Touré & Ry Cooder': ['Ali Farka Touré', 'Ry Cooder'],
+            'Ali Farka Touré & Toumani Diabeté': ['Ali Farka Touré', 'Toumani Diabeté'],
+            'Albert King & Stevie Ray Vaughan': ['Albert King', 'Stevie Ray Vaughan'],
+            'B.B. King & Dr. John': ['B.B. King', 'Dr. John'],
+            'B.B. King & Mick Hucknall': ['B.B. King', 'Mick Hucknall'],
+            'B.B. King & Tracy Chapman': ['B.B. King', 'Tracy Chapman'],
+            'Ben Harper & the Blind Boys of Alabama': ['Ben Harper', 'The Blind Boys of Alabama'],
+            'Beth Hart and Joe Bonamassa': ['Beth Hart', 'Joe Bonamassa'],
+            'Beth Hart & Joe Bonamassa': ['Beth Hart', 'Joe Bonamassa'],
+            'Billy Bragg & Wilco': ['Billy Bragg', 'Wilco'],
+            'Bloomfield, Kooper, Stills': ['Al Kooper', 'Steve Stills', 'Bloomfield'],
+            'Damon Albarn & Friends': ['Damon Albarn', 'Malian Musicians'],
+            'Danger Mouse & Daniele Luppi': ['Danger Mouse', 'Daniele Luppi'],
+            'Danger Mouse & Sparklehorse': ['Danger Mouse', 'Sparklehorse'],
+            'Dave Matthews & Tim Reynolds': ['Dave Matthews', 'Tim Reynolds'],
+            'David Byrne and Brian Eno': ['David Byrne', 'Brian Eno'],
+            'David Tiller & Enion Pelta': ['David Tiller', 'Enion Pelta'],
+            'Ella Fitzgerald & Joe Pass': ['Ella Fitzgerald', 'Joe Pass'],
+            'Habib Koité & Bamada': ['Habib Koité', 'Bamada'],
+            'Leftover Salmon & Cracker': ['Leftover Salmon', 'Cracker'],
+        },
+        MAPPING_TYPE_ANY_OF: {
+            'Oliver Mtukudzi': ['Oliver Mtukudzi', 'Oliver Mtukudzi and The Black Spirits'],
+            'Ryan Adams': ['Ryan Adams', 'Ryan Adams & The Cardinals'],
+            'BÃ©la Fleck': ['Béla Fleck', 'Béla Fleck and the Flecktones'],
+            'Béla Fleck': ['Béla Fleck', 'Béla Fleck and the Flecktones'],
+            'Ben Harper': ['Ben Harper', 'Ben Harper And Relentless7'],
+            'Elvis Costello': ['Elvis Costello', 'Elvis Costello & The Attractions'],
+            'Robyn Hitchcock': ['Robyn Hitchcock', 'Robyn Hitchcock & The Egyptians'],
+            'Easy Star All-Stars': ['Toots & The Maytals', 'Citizen Cope', 'The Meditations'], # see album: Radiodread
+            'Raymond Kane': ['Raymond Kane', 'Ray Kane'],
+        }
     }
+
+
 
     strip_chars_pattern = re.compile('[{}]'.format(re.escape(string.punctuation + ' ')))
     # Match things like ", part 2":
@@ -112,8 +136,8 @@ class TrackSearch(object):
         #      a song whose name almost matches on the album, if the album can be matched.
 
 
-        artist_names = self.map_artist_names(song.artists.all())
-        query = self.build_query(song.title, artist_name=artist_names)
+        and_artist_names, or_artist_names = self.map_artist_names(song.artists.all())
+        query = self.build_query(song.title, and_artist_names=and_artist_names, or_artist_names=or_artist_names)
 
         results = self.get_query_results(query)
         self.add_full_album_info(results)
@@ -129,14 +153,14 @@ class TrackSearch(object):
             if track_info is None:
                 continue
 
-            artist_info = self.extract_artist_info(song, artist_names, item['artists'])
+            artist_info = self.extract_artist_info(song, and_artist_names, or_artist_names, item['artists'])
             if artist_info is None:
                 continue
 
             album_info = self.extract_album_info(song.album.title, song.album.release_year, item)
 
             # Find the best match per country.
-            score = sum(info.match_score for info in [track_info, artist_info, album_info])
+            score = sum(info.match_score for info in [track_info, artist_info, album_info]) * 100
             for country in item['available_markets']:
                 previous_score = matches_score.get(country, -1)
                 if score > previous_score:
@@ -186,9 +210,16 @@ class TrackSearch(object):
         if track_availabilities:
             TrackAvailability.objects.bulk_create(track_availabilities)
 
-    def build_query(self, track_title, artist_name=None, album_title=None):
+    def artist_query_fragment(self, artist_name):
+        search_artist = self.prepare_text_for_search(artist_name)
+        return 'artist:"{}"'.format(search_artist)
+
+    def build_query(self, track_title, and_artist_names=None, or_artist_names=None, album_title=None):
         """
         Builds a query based on the passed values.
+
+        Note for or_artist_names: this only works when there are two artists, because the spotify API
+        limits the query phrase to having one OR clause.
 
         :param track_title:
         :param artist_name: string or iterable of artist names
@@ -196,14 +227,16 @@ class TrackSearch(object):
         :return: query string
         """
         search_track = self.prepare_text_for_search(track_title)
-
         q = ['track:"{}"'.format(search_track)]
-        if artist_name:
-            if isinstance(artist_name, str):
-                artist_name = [artist_name]
-            for name in artist_name:
-                search_artist = self.prepare_text_for_search(name)
-                q.append('artist:"{}"'.format(search_artist))
+
+        if or_artist_names:
+            q.append(self.artist_query_fragment(or_artist_names[0]))
+            q.append("OR")
+            q.append(self.artist_query_fragment(or_artist_names[1]))
+        elif and_artist_names:
+            for name in and_artist_names:
+                q.append(self.artist_query_fragment(name))
+
         if album_title:
             search_album = self.prepare_text_for_search(album_title)
             q.append('album:"{}"'.format(search_album))
@@ -265,7 +298,24 @@ class TrackSearch(object):
         for item in items:
             item['album'] = album_info[item['album']['id']]
 
-    def extract_artist_info(self, song, artist_names, artist_list):
+    def match_artist(self, artist, artist_list):
+        artist_simple = self.simplified_text(artist)
+        for a in artist_list:
+            a_simple = self.simplified_text(a['name'])
+            if a_simple == artist_simple:
+                return 1.0, a
+
+            a_alternate = 'the' + a_simple
+            artist_alternate = 'the' + artist_simple
+            if a_alternate == artist_alternate:
+                return 0.9, a
+
+            if len({artist_simple, artist_alternate, a_simple, a_alternate}) < 4:
+                # One of expected and existing pairs matched
+                return 0.8, a
+        return 0.0, None
+
+    def extract_artist_info(self, song, artist_names, alternative_artist_names, artist_list):
         """
         Find a matching artist. There may be many artists, if there are then the match_score is proportionally
         higher according to the number of matched artist names.
@@ -275,31 +325,43 @@ class TrackSearch(object):
 
         :param Song song:
         :param artist_names: array of artist names provided by source
+        :param artist_names: array of artist names, one of which should match, provided by source
         :param artist_list: array of spotify API album artist results
         :return: ArtistInfo
         """
+
         match_score = 0
-        one_artist_matched = False
+        highest_artist_match_score = 0
+        best_artist_match = None
 
         for artist in artist_names:
-            artist_simple = self.simplified_text(artist)
-            artist_alternate = 'the' + artist_simple
-            for a in artist_list:
-                a_simple = self.simplified_text(a['name'])
-                a_alternate = 'the' + a_simple
-                if len({artist_simple, artist_alternate, a_simple, a_alternate}) < 4:
-                    one_artist_matched = True
-                    match_score += int(artist_simple == a_simple)
-                    continue
+            score, matched_artist = self.match_artist(artist, artist_list)
+            if score > 0:
+                match_score += score
+                if highest_artist_match_score < score:
+                    best_artist_match = matched_artist
 
-        if one_artist_matched:
+
+        for artist in alternative_artist_names:
+            score, matched_artist = self.match_artist(artist, artist_list)
+            if score > 0:
+                match_score += score
+                if highest_artist_match_score < score:
+                    best_artist_match = matched_artist
+                break
+
+        if match_score > 0:
+            # Ideally, all artist names should match.  If alternative artist names are provided,
+            # then one of them should match.
+            max_matches = len(artist_names) + int(len(alternative_artist_names) > 0)
             artist_count = len(artist_list)
             multiple =  artist_count > 1
-            score = match_score / artist_count
-            return ArtistInfo(id=a['id'], name=a['name'], multiple=multiple, match_score=score)
+            score = match_score / max_matches
+            return ArtistInfo(
+                id=best_artist_match['id'], name=best_artist_match['name'], multiple=multiple, match_score=score)
         else:
             message = "Artists '{}' not found in list: {}".format(
-                    artist_names, [a['name'] for a in artist_list]
+                    artist_names + alternative_artist_names, [a['name'] for a in artist_list]
             )
             log.debug(message)
             return None
@@ -337,13 +399,20 @@ class TrackSearch(object):
         track_simple = self.simplified_text(track_title)
         item_track_simple = self.simplified_text(item['name'])
 
+        match_score=1.0
         track_match = track_simple == item_track_simple
         if not track_match:
             # Accept things like "the <song name> 2004 remaster":
+            match_score=0.9
             regex = r"^(the)?" + track_simple + r"(\d{4})?((digital)?(remaster(ed)?))?"
             track_match = re.match(regex, item_track_simple)
+        if not track_match:
+            # Accept things like "the <song name> - instrumental ":
+            match_score=0.6
+            regex = r"^(the)?" + track_simple + r"(instrumental|vocal|acoustic|live)?"
+            track_match = re.match(regex, item_track_simple)
         if track_match:
-            return TrackInfo(id=item['id'], title=item['name'], match_score=1)
+            return TrackInfo(id=item['id'], title=item['name'], match_score=match_score)
         else:
             message = "Expected track: {}, found track: {}".format(track_title, item['name'])
             log.debug(message)
@@ -406,19 +475,34 @@ class TrackSearch(object):
     def map_artist_names(self, artists):
         """
         Replace Radio Paradise name with Spotify name for some artists that are named differently by the two services.
+
+        The return tuple allows the caller to know whether an OR query should be used.
+
         :param iterable of Artist objects
-        :return: string
+        :return: tuple: (and_artists, or_artists)
         """
         # TODO: should these be managed in the DB?
-        mapped_artists = []
+        and_artists = []
+        or_artists = []
         for artist in artists:
-            mapped = self.rp_to_spotify_artist_map.get(artist.name, artist.name)
-            if isinstance(mapped, list):
-                mapped_artists += mapped
-            else:
-                mapped_artists.append(mapped)
+            mapped = self.rp_to_spotify_artist_map[self.MAPPING_TYPE_REPLACE].get(artist.name)
+            if mapped is not None:
+                and_artists.append(mapped)
+                continue
 
-        return mapped_artists
+            mapped = self.rp_to_spotify_artist_map[self.MAPPING_TYPE_ONE_TO_MANY].get(artist.name)
+            if mapped is not None:
+                and_artists += mapped
+                continue
+
+            mapped = self.rp_to_spotify_artist_map[self.MAPPING_TYPE_ANY_OF].get(artist.name)
+            if mapped is not None:
+                or_artists += mapped
+                continue
+
+            and_artists.append(artist.name)
+
+        return and_artists, or_artists
 
     def simplified_text(self, string):
         string = string.lower().replace(' & ', ' and ').replace(' + ', ' and ')
