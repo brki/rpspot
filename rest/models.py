@@ -13,19 +13,25 @@ def history(time_start, time_end, country):
 
     # TODO cache with a key "country + time_start (minute precision) + time_end (minute precision)"
 
+    # Subquery with DISTINCT is used to eliminate some duplicate artist -> track mappings that happen
+    # where Radio Paradise changes song artist information and that song is reprocessed by the map_tracks command.
     sql = """
-    SELECT h.played_at, s.title, artist.name as artist_name, album.title as album_title, track.spotify_id AS spotify_track_id,
-           spot_album.img_small_url AS spotify_album_img_small_url, spot_album.img_large_url AS spotify_album_img_large_url
-     FROM rphistory_history h
-     JOIN rphistory_song s ON h.song_id = s.id
-     JOIN rphistory_artist_songs ras ON s.id = ras.song_id
-     JOIN rphistory_artist artist ON artist.id = ras.artist_id
-     JOIN rphistory_album album ON album.id = s.album_id
-     LEFT OUTER JOIN trackmap_trackavailability ta ON ta.rp_song_id = s.id AND ta.country = %s
-     LEFT OUTER JOIN trackmap_track track ON track.id = ta.track_id
-     LEFT OUTER JOIN trackmap_album spot_album ON spot_album.id = track.album_id
-     WHERE h.played_at BETWEEN %s AND %s
-     ORDER BY h.played_at DESC
+    SELECT played_at, title, artist_name, album_title, spotify_track_id, spotify_album_img_small_url, spotify_album_img_large_url
+     FROM (
+        SELECT DISTINCT h.played_at, s.title, artist.name as artist_name, album.title as album_title, track.spotify_id AS spotify_track_id,
+               spot_album.img_small_url AS spotify_album_img_small_url, spot_album.img_large_url AS spotify_album_img_large_url,
+               artist.id
+         FROM rphistory_history h
+         JOIN rphistory_song s ON h.song_id = s.id
+         JOIN rphistory_artist_songs ras ON s.id = ras.song_id
+         JOIN rphistory_artist artist ON artist.id = ras.artist_id
+         JOIN rphistory_album album ON album.id = s.album_id
+         LEFT OUTER JOIN trackmap_trackavailability ta ON ta.rp_song_id = s.id AND ta.country = %s
+         LEFT OUTER JOIN trackmap_track track ON track.id = ta.track_id
+         LEFT OUTER JOIN trackmap_album spot_album ON spot_album.id = track.album_id
+         WHERE h.played_at BETWEEN %s AND %s
+         ORDER BY h.played_at DESC, artist.id DESC
+     ) subq
     """
     params = [country, time_start, time_end]
 
