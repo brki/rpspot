@@ -91,6 +91,7 @@ class TrackSearch(object):
     part_x_type1 = re.compile(',? ?(pt\.|part) (?P<part_number>\d+)')
     # Match things like " (part 2)", with a named group for the part number
     part_x_type2 = re.compile(' ?\((pt\.|part) (?P<part_number>\d+)\)')
+    featuring_pattern = re.compile('\((w/|feat.|featuring) (?P<featuring>[^\)]+)\)')
 
     def __init__(self, query_limit=40, max_items_to_process=200):
         self.spotify = spotify()
@@ -423,6 +424,7 @@ class TrackSearch(object):
         string = string.lower().replace(' & ', ' and ').replace(' + ', ' and ')
         string = re.sub(self.part_x_type1, ' part\g<part_number>', string)
         string = re.sub(self.part_x_type2, ' part\g<part_number>', string)
+        string = self.remove_featuring(string, leave_feature=True)
         string = self.remove_leading_article(string)
         string = remove_accents(self.strip_non_words_pattern.sub('', string))
         return re.sub(self.strip_chars_pattern, '', string)
@@ -437,6 +439,7 @@ class TrackSearch(object):
         plain_text = remove_accents(text).strip().lower()
         plain_text = self.remove_leading_article(plain_text)
         plain_text = self.remove_part_x(plain_text)
+        plain_text = self.remove_featuring(plain_text, leave_feature=False)
         return plain_text
 
     def remove_leading_article(self, text):
@@ -460,3 +463,17 @@ class TrackSearch(object):
 
     def remove_part_x(self, text):
         return re.sub(self.part_x_pattern, '', text)
+
+    def remove_featuring(self, text, leave_feature):
+        """
+        Transform things like "(w/ foo)" or "(featuring foo)" to simply "featuring foo" (or remove it completely)
+
+        :param text:
+        :param leave_feature: if True, do not remove "foo" if (w/ foo) is matched.  if False, remove the entire match.
+        :return:
+        """
+
+        if leave_feature:
+            return re.sub(self.featuring_pattern, 'featuring \g<featuring>', text)
+        else:
+            return re.sub(self.featuring_pattern, '', text)
