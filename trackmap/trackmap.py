@@ -80,6 +80,8 @@ class TrackSearch(object):
         'Ella Fitzgerald & Joe Pass': ['Ella Fitzgerald', 'Joe Pass'],
         'Elvis Costello': ['Elvis Costello', 'Elvis Costello & The Attractions'],
         'Sixteen Horsepower': '16 Horsepower',
+        'Habib Koité & Bamada': ['Habib Koité', 'Bamada'],
+        'Leftover Salmon & Cracker': ['Leftover Salmon', 'Cracker'],
     }
 
     strip_chars_pattern = re.compile('[{}]'.format(re.escape(string.punctuation + ' ')))
