@@ -409,7 +409,7 @@ class TrackSearch(object):
         if not track_match:
             # Accept things like "the <song name> - instrumental ":
             match_score=0.6
-            regex = r"^(the)?" + track_simple + r"(instrumental|vocal|acoustic|live)?"
+            regex = r"^(the)?" + track_simple + r"(instrumental|vocal|acoustic|live|original)?"
             track_match = re.match(regex, item_track_simple)
         if track_match:
             return TrackInfo(id=item['id'], title=item['name'], match_score=match_score)
