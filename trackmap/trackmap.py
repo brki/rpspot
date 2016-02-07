@@ -83,6 +83,12 @@ class TrackSearch(object):
     }
 
     strip_chars_pattern = re.compile('[{}]'.format(re.escape(string.punctuation + ' ')))
+    # Match things like ", part 2":
+    part_x_pattern = re.compile(',? (\((pt\.|part) \d+\)|(pt\.|part \d+))')
+    # Match things like ", pt. 2", with a named group for the part number
+    part_x_type1 = re.compile(',? ?(pt\.|part) (?P<part_number>\d+)')
+    # Match things like " (part 2)", with a named group for the part number
+    part_x_type2 = re.compile(' ?\((pt\.|part) (?P<part_number>\d+)\)')
 
     def __init__(self, query_limit=40, max_items_to_process=200):
         self.spotify = spotify()
@@ -413,6 +419,8 @@ class TrackSearch(object):
 
     def simplified_text(self, string):
         string = string.lower().replace(' & ', ' and ').replace(' + ', ' and ')
+        string = re.sub(self.part_x_type1, ' part\g<part_number>', string)
+        string = re.sub(self.part_x_type2, ' part\g<part_number>', string)
         string = self.remove_leading_article(string)
         string = remove_accents(self.strip_non_words_pattern.sub('', string))
         return re.sub(self.strip_chars_pattern, '', string)
@@ -425,7 +433,9 @@ class TrackSearch(object):
             return None
 
         plain_text = remove_accents(text).strip().lower()
-        return self.remove_leading_article(plain_text)
+        plain_text = self.remove_leading_article(plain_text)
+        plain_text = self.remove_part_x(plain_text)
+        return plain_text
 
     def remove_leading_article(self, text):
         """
@@ -445,3 +455,6 @@ class TrackSearch(object):
             return text
 
         return stripped_text
+
+    def remove_part_x(self, text):
+        return re.sub(self.part_x_pattern, '', text)
