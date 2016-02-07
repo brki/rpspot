@@ -103,6 +103,7 @@ class TrackSearch(object):
             'Robyn Hitchcock': ['Robyn Hitchcock', 'Robyn Hitchcock & The Egyptians'],
             'Easy Star All-Stars': ['Toots & The Maytals', 'Citizen Cope', 'The Meditations'], # see album: Radiodread
             'Raymond Kane': ['Raymond Kane', 'Ray Kane'],
+            'Elephant Revival': ['Elephant Revival', 'Elephant Revivial'],
         }
     }
 
