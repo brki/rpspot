@@ -69,6 +69,7 @@ class TrackSearch(object):
             'Angélique Kidjo': 'Angelique Kidjo',
             'Edie Brickell': 'Edie Brickell & New Bohemians',
             'Sixteen Horsepower': '16 Horsepower',
+            'Cheikh Lo Lo': 'Cheikh Lô',
         },
         MAPPING_TYPE_ONE_TO_MANY: {
             'Robert Plant & Alison Krauss': ['Robert Plant', 'Alison Krauss'],
