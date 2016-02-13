@@ -70,6 +70,7 @@ class TrackSearch(object):
             'Edie Brickell': 'Edie Brickell & New Bohemians',
             'Sixteen Horsepower': '16 Horsepower',
             'Cheikh Lo Lo': 'Cheikh Lô',
+            'Khachaturian': 'Aram Khachaturian',
         },
         MAPPING_TYPE_ONE_TO_MANY: {
             'Robert Plant & Alison Krauss': ['Robert Plant', 'Alison Krauss'],
@@ -93,6 +94,7 @@ class TrackSearch(object):
             'Ella Fitzgerald & Joe Pass': ['Ella Fitzgerald', 'Joe Pass'],
             'Habib Koité & Bamada': ['Habib Koité', 'Bamada'],
             'Leftover Salmon & Cracker': ['Leftover Salmon', 'Cracker'],
+            'Blanquito Man, Control Machete & Celso Piña': ['Blanquito Man', 'Control Machete', 'Celso Piña'],
         },
         MAPPING_TYPE_ANY_OF: {
             'Oliver Mtukudzi': ['Oliver Mtukudzi', 'Oliver Mtukudzi and The Black Spirits'],
