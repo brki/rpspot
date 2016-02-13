@@ -405,7 +405,7 @@ class TrackSearch(object):
         if not track_match:
             # Accept things like "the <song name> 2004 remaster":
             match_score=0.9
-            regex = r"^(the)?" + track_simple + r"(\d{4})?((digital)?(remaster(ed)?))?"
+            regex = r"^(the)?" + track_simple + r"(\d{4})?((digital)?(remaster(ed)?)(version)?)?"
             track_match = re.match(regex, item_track_simple)
         if not track_match:
             # Accept things like "the <song name> - instrumental ":
