@@ -71,6 +71,7 @@ class TrackSearch(object):
             'Sixteen Horsepower': '16 Horsepower',
             'Cheikh Lo Lo': 'Cheikh Lô',
             'Khachaturian': 'Aram Khachaturian',
+            'Iron & Wine and Calexico': 'Calexico / Iron and Wine',
         },
         MAPPING_TYPE_ONE_TO_MANY: {
             'Robert Plant & Alison Krauss': ['Robert Plant', 'Alison Krauss'],
