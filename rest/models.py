@@ -16,9 +16,9 @@ def history(time_start, time_end, country):
     # Subquery with DISTINCT is used to eliminate some duplicate artist -> track mappings that happen
     # where Radio Paradise changes song artist information and that song is reprocessed by the map_tracks command.
     sql = """
-    SELECT date_trunc('second', played_at) AS played_at, rp_song_id, title, artist_name, album_title, spotify_track_id, spotify_album_img_small_url, spotify_album_img_large_url
+    SELECT DISTINCT date_trunc('second', played_at) AS played_at, rp_song_id, title, artist_name, album_title, spotify_track_id, spotify_album_img_small_url, spotify_album_img_large_url
      FROM (
-        SELECT DISTINCT h.played_at, s.rp_song_id, s.title, artist.name as artist_name, album.title as album_title, track.spotify_id AS spotify_track_id,
+        SELECT h.played_at, s.rp_song_id, s.title, artist.name as artist_name, album.title as album_title, track.spotify_id AS spotify_track_id,
                spot_album.img_small_url AS spotify_album_img_small_url, spot_album.img_large_url AS spotify_album_img_large_url,
                artist.id
          FROM rphistory_history h
