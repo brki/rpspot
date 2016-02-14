@@ -112,20 +112,31 @@ class TrackSearch(object):
 
 
 
+    # Characters that can be stripped when comparing possible matches:
     strip_chars_pattern = re.compile('[{}]'.format(re.escape(string.punctuation + ' ')))
+
+    # Characters that can be stripped when querying Spotify for a match:
+    search_strip_chars_pattern = re.compile('[{}]'.format(re.escape(string.punctuation)))
+
     # Match things like ", part 2":
     part_x_pattern = re.compile(',? (\((pt\.|part) \d+\)|(pt\.|part \d+))')
-    # Match things like ", pt. 2", with a named group for the part number
+
+    # Match things like ", pt. 2", with a named group for the part number:
     part_x_type1 = re.compile(',? ?(pt\.|part) (?P<part_number>\d+)')
-    # Match things like " (part 2)", with a named group for the part number
+
+    # Match things like " (part 2)", with a named group for the part number:
     part_x_type2 = re.compile(' ?\((pt\.|part) (?P<part_number>\d+)\)')
+
+    # Match things like "(w/ Markus Garvey)" and "feat. Jerry Garcia":
     featuring_pattern = re.compile('\((w/|feat.|featuring) (?P<featuring>[^\)]+)\)')
+
+    # Match all non-alphanumeric characters (unicode aware):
+    strip_non_words_pattern = re.compile('[\W_]+', re.UNICODE)
 
     def __init__(self, query_limit=40, max_items_to_process=200):
         self.spotify = spotify()
         self.query_limit = query_limit
         self.max_items_to_process = max_items_to_process
-        self.strip_non_words_pattern = re.compile('[\W_]+', re.UNICODE)
 
     def find_matching_tracks(self, song):
         """
@@ -519,7 +530,7 @@ class TrackSearch(object):
 
     def prepare_text_for_search(self, text):
         """
-        Remove accents and remove leading 'a ' or 'the '.
+        Remove accents and remove leading 'a ' or 'the ', and punctuation characters.
         """
         if text is None:
             return None
@@ -528,6 +539,7 @@ class TrackSearch(object):
         plain_text = self.remove_leading_article(plain_text)
         plain_text = self.remove_part_x(plain_text)
         plain_text = self.remove_featuring(plain_text, leave_feature=False)
+        plain_text = self.search_strip_chars_pattern.sub('', plain_text)
         return plain_text
 
     def remove_leading_article(self, text):
