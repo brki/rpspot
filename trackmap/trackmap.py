@@ -96,6 +96,7 @@ class TrackSearch(object):
             'Habib Koité & Bamada': ['Habib Koité', 'Bamada'],
             'Leftover Salmon & Cracker': ['Leftover Salmon', 'Cracker'],
             'Blanquito Man, Control Machete & Celso Piña': ['Blanquito Man', 'Control Machete', 'Celso Piña'],
+            'J.J. Cale & Eric Clapton': ['J.J. Cale', 'Eric Clapton'],
         },
         MAPPING_TYPE_ANY_OF: {
             'Oliver Mtukudzi': ['Oliver Mtukudzi', 'Oliver Mtukudzi and The Black Spirits'],
