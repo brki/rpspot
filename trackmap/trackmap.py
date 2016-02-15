@@ -72,6 +72,7 @@ class TrackSearch(object):
             'Cheikh Lo Lo': 'Cheikh Lô',
             'Khachaturian': 'Aram Khachaturian',
             'Iron & Wine and Calexico': 'Calexico / Iron and Wine',
+            '!Deladap': '!Dela Dap',  # Spotify seems wrong on this one
         },
         MAPPING_TYPE_ONE_TO_MANY: {
             'Robert Plant & Alison Krauss': ['Robert Plant', 'Alison Krauss'],
