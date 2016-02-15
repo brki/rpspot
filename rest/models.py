@@ -18,11 +18,11 @@ def history(time_start, time_end, country):
     # There are also some duplicate entries for songs that were reported played at, for example, 12:30:00 AND
     # 12:30:00.120999.
     sql = """
-    SELECT DISTINCT date_trunc('second', played_at) AS played_at, rp_song_id, title, artist_name, album_title, spotify_track_id, spotify_album_img_small_url, spotify_album_img_large_url
+    SELECT DISTINCT ON (played_at) played_at, rp_song_id, title, artist_name, album_title, spotify_track_id, spotify_album_img_small_url, spotify_album_img_large_url
      FROM (
-        SELECT h.played_at, s.rp_song_id, s.title, artist.name as artist_name, album.title as album_title, track.spotify_id AS spotify_track_id,
+        SELECT date_trunc('second', h.played_at) AS played_at, s.rp_song_id, s.title, artist.name as artist_name, album.title as album_title, track.spotify_id AS spotify_track_id,
                spot_album.img_small_url AS spotify_album_img_small_url, spot_album.img_large_url AS spotify_album_img_large_url,
-               artist.id
+               artist.id AS artist_id
          FROM rphistory_history h
          JOIN rphistory_song s ON h.song_id = s.id
          JOIN rphistory_artist_songs ras ON s.id = ras.song_id
@@ -33,7 +33,7 @@ def history(time_start, time_end, country):
          LEFT OUTER JOIN trackmap_album spot_album ON spot_album.id = track.album_id
          WHERE h.played_at BETWEEN %s AND %s
      ) subq
-    ORDER BY 1 DESC
+    ORDER BY played_at DESC, artist_id DESC
     """
     params = [country, time_start, time_end]
 
