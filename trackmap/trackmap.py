@@ -57,8 +57,11 @@ class TrackSearch(object):
     MAPPING_TYPE_REPLACE = 'replace_single'
     MAPPING_TYPE_ONE_TO_MANY = 'one_to_many'
     MAPPING_TYPE_ANY_OF = 'any_of'
+    REPLACE_FOR_SEARCH_ONLY = 'replace_single_search_only'
+
     rp_to_spotify_artist_map = {
         MAPPING_TYPE_REPLACE: {
+            '10 CC': '10cc',
             'Bob Marley': 'Bob Marley & The Wailers',
             'The English Beat': 'The Beat',
             'English Beat': 'The Beat',
@@ -86,7 +89,7 @@ class TrackSearch(object):
             'Beth Hart and Joe Bonamassa': ['Beth Hart', 'Joe Bonamassa'],
             'Beth Hart & Joe Bonamassa': ['Beth Hart', 'Joe Bonamassa'],
             'Billy Bragg & Wilco': ['Billy Bragg', 'Wilco'],
-            'Bloomfield, Kooper, Stills': ['Al Kooper', 'Steve Stills', 'Bloomfield'],
+            'Bloomfield, Kooper, Stills': ['Al Kooper', 'Steve Stills'], # Spotify seems wrong to exclude Bloomfield.
             'Damon Albarn & Friends': ['Damon Albarn', 'Malian Musicians'],
             'Danger Mouse & Daniele Luppi': ['Danger Mouse', 'Daniele Luppi'],
             'Danger Mouse & Sparklehorse': ['Danger Mouse', 'Sparklehorse'],
@@ -98,6 +101,7 @@ class TrackSearch(object):
             'Leftover Salmon & Cracker': ['Leftover Salmon', 'Cracker'],
             'Blanquito Man, Control Machete & Celso Piña': ['Blanquito Man', 'Control Machete', 'Celso Piña'],
             'J.J. Cale & Eric Clapton': ['J.J. Cale', 'Eric Clapton'],
+            'Vishwa Mohan Bhatt & Jerry Douglas': ['Vishwa Mohan Bhatt', 'Jerry Douglas'],
         },
         MAPPING_TYPE_ANY_OF: {
             'Oliver Mtukudzi': ['Oliver Mtukudzi', 'Oliver Mtukudzi and The Black Spirits'],
@@ -110,6 +114,10 @@ class TrackSearch(object):
             'Easy Star All-Stars': ['Toots & The Maytals', 'Citizen Cope', 'The Meditations'], # see album: Radiodread
             'Raymond Kane': ['Raymond Kane', 'Ray Kane'],
             'Elephant Revival': ['Elephant Revival', 'Elephant Revivial'],
+            '1 Giant Leap': ['Michael Stipe', 'Asha Bhosle'],
+        },
+        REPLACE_FOR_SEARCH_ONLY: {
+            '10,000 Maniacs': 'Maniacs'  # Strange, but Spotify doesn't find it with 10000 Maniacs.
         }
     }
 
@@ -135,6 +143,15 @@ class TrackSearch(object):
 
     # Match all non-alphanumeric characters (unicode aware):
     strip_non_words_pattern = re.compile('[\W_]+', re.UNICODE)
+
+    # Match text like .*(live|acoustic)
+    live_pattern = re.compile(r'^(.*?)(live|acoustic)$')
+
+    # Match text like .*(\(live|acoustic\))
+    live_raw_pattern = re.compile(r'^(.*?)\s*\(\s*(live|acoustic)\s*\)\s*$')
+
+    # Match text like .*(live|acoustic)
+    unplugged_pattern = re.compile(r'^(.*?)((mtvunplugged(version)?)|unpluggedversion)$')
 
     def __init__(self, query_limit=40, max_items_to_process=200):
         self.spotify = spotify()
@@ -229,7 +246,8 @@ class TrackSearch(object):
             TrackAvailability.objects.bulk_create(track_availabilities)
 
     def artist_query_fragment(self, artist_name):
-        search_artist = self.prepare_text_for_search(artist_name)
+        search_artist = self.rp_to_spotify_artist_map[self.REPLACE_FOR_SEARCH_ONLY].get(artist_name, artist_name)
+        search_artist = self.prepare_text_for_search(search_artist)
         return 'artist:"{}"'.format(search_artist)
 
     def build_query(self, track_title, and_artist_names=None, or_artist_names=None, album_title=None):
@@ -244,7 +262,8 @@ class TrackSearch(object):
         :param album_title:
         :return: query string
         """
-        search_track = self.prepare_text_for_search(track_title)
+        search_track = self.strip_live_marker(track_title)
+        search_track = self.prepare_text_for_search(search_track)
         q = ['track:"{}"'.format(search_track)]
 
         if or_artist_names:
@@ -417,18 +436,33 @@ class TrackSearch(object):
         track_simple = self.simplified_text(track_title)
         item_track_simple = self.simplified_text(item['name'])
 
-        match_score=1.0
+        match_score = 1.0
         track_match = track_simple == item_track_simple
+
         if not track_match:
             # Accept things like "the <song name> 2004 remaster":
-            match_score=0.9
+            match_score = 0.9
             regex = r"^(the)?" + track_simple + r"(\d{4})?((digital)?(remaster(ed)?)(version)?)?"
             track_match = re.match(regex, item_track_simple)
+
         if not track_match:
             # Accept things like "the <song name> - instrumental ":
-            match_score=0.6
+            match_score = 0.6
             regex = r"^(the)?" + track_simple + r"(instrumental|vocal|acoustic|live|original)?"
             track_match = re.match(regex, item_track_simple)
+
+        if not track_match:
+            # Sometimes there are songs like "Song (live)" that should match "Song [MTV Unplugged Version]"
+            match_score = 0.4
+            if '(' in track_title:
+                try:
+                    base_track = self.live_pattern.match(track_simple).groups()[0]
+                    base_item = self.unplugged_pattern.match(item_track_simple).groups()[0]
+                    track_match = base_track == base_item
+                except:
+                    # One of regexes failed to match ... give up.
+                    pass
+
         if track_match:
             return TrackInfo(id=item['id'], title=item['name'], match_score=match_score)
         else:
@@ -580,3 +614,10 @@ class TrackSearch(object):
             return re.sub(self.featuring_pattern, 'featuring \g<featuring>', text)
         else:
             return re.sub(self.featuring_pattern, '', text)
+
+    def strip_live_marker(self, track_title):
+        match = self.live_raw_pattern.match(track_title)
+        if match:
+            return match.groups()[0]
+        else:
+            return track_title
