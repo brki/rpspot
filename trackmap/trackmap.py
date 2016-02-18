@@ -141,6 +141,8 @@ class TrackSearch(object):
     # Match things like "(w/ Markus Garvey)" and "feat. Jerry Garcia":
     featuring_pattern = re.compile('\((w/|feat.|featuring) (?P<featuring>[^\)]+)\)')
 
+    contains_featuring_pattern = re.compile('^.*' + featuring_pattern.pattern + '.*$')
+
     # Match all non-alphanumeric characters (unicode aware):
     strip_non_words_pattern = re.compile('[\W_]+', re.UNICODE)
 
@@ -378,7 +380,6 @@ class TrackSearch(object):
                 if highest_artist_match_score < score:
                     best_artist_match = matched_artist
 
-
         for artist in alternative_artist_names:
             score, matched_artist = self.match_artist(artist, artist_list)
             if score > 0:
@@ -436,39 +437,53 @@ class TrackSearch(object):
         track_simple = self.simplified_text(track_title)
         item_track_simple = self.simplified_text(item['name'])
 
-        match_score = 1.0
-        track_match = track_simple == item_track_simple
+        match_score = self.track_info_match(track_title, track_simple, item_track_simple)
 
-        if not track_match:
-            # Accept things like "the <song name> 2004 remaster":
-            match_score = 0.9
-            regex = r"^(the)?" + track_simple + r"(\d{4})?((digital)?(remaster(ed)?)(version)?)?"
-            track_match = re.match(regex, item_track_simple)
+        if not match_score and self.contains_featuring_pattern.match(track_title):
+            # Retry without the "featuring" text
+            track_simple = self.simplified_text(track_title, leave_feature=False)
+            match_score = self.track_info_match(track_title, track_simple, item_track_simple)
+            match_score -= 0.1
 
-        if not track_match:
-            # Accept things like "the <song name> - instrumental ":
-            match_score = 0.6
-            regex = r"^(the)?" + track_simple + r"(instrumental|vocal|acoustic|live|original)?"
-            track_match = re.match(regex, item_track_simple)
-
-        if not track_match:
-            # Sometimes there are songs like "Song (live)" that should match "Song [MTV Unplugged Version]"
-            match_score = 0.4
-            if '(' in track_title:
-                try:
-                    base_track = self.live_pattern.match(track_simple).groups()[0]
-                    base_item = self.unplugged_pattern.match(item_track_simple).groups()[0]
-                    track_match = base_track == base_item
-                except:
-                    # One of regexes failed to match ... give up.
-                    pass
-
-        if track_match:
+        if match_score > 0:
             return TrackInfo(id=item['id'], title=item['name'], match_score=match_score)
         else:
             message = "Expected track: {}, found track: {}".format(track_title, item['name'])
             log.debug(message)
         return None
+
+    def track_info_match(self, expected_title, expected_title_simple, search_result_title_simple):
+        match_score = 1.0
+        track_match = expected_title_simple == search_result_title_simple
+
+        if not track_match:
+            # Accept things like "the <song name> 2004 remaster":
+            match_score = 0.9
+            regex = r"^(the)?" + expected_title_simple + r"(\d{4})?((digital)?(remaster(ed)?)(version)?)?"
+            track_match = re.match(regex, search_result_title_simple)
+
+            if not track_match:
+                # Accept things like "the <song name> - instrumental ":
+                match_score = 0.6
+                regex = r"^(the)?" + expected_title_simple + r"(instrumental|vocal|acoustic|live|original)?"
+                track_match = re.match(regex, search_result_title_simple)
+
+                if not track_match:
+                    # Sometimes there are songs like "Song (live)" that should match "Song [MTV Unplugged Version]"
+                    match_score = 0.5
+                    if '(' in expected_title:
+                        try:
+                            base_track = self.live_pattern.match(expected_title_simple).groups()[0]
+                            base_item = self.unplugged_pattern.match(search_result_title_simple).groups()[0]
+                            track_match = base_track == base_item
+                        except:
+                            # One of regexes failed to match ... give up.
+                            pass
+
+                    if not track_match:
+                        match_score = 0
+
+        return match_score
 
     @transaction.atomic
     def get_or_create_track(self, track_info, artist_info, album_info):
@@ -556,11 +571,11 @@ class TrackSearch(object):
 
         return and_artists, or_artists
 
-    def simplified_text(self, string):
+    def simplified_text(self, string, leave_feature=True):
         string = string.lower().replace(' & ', ' and ').replace(' + ', ' and ')
         string = re.sub(self.part_x_type1, ' part\g<part_number>', string)
         string = re.sub(self.part_x_type2, ' part\g<part_number>', string)
-        string = self.remove_featuring(string, leave_feature=True)
+        string = self.remove_featuring(string, leave_feature=leave_feature)
         string = self.remove_leading_article(string)
         string = remove_accents(self.strip_non_words_pattern.sub('', string))
         return re.sub(self.strip_chars_pattern, '', string)
