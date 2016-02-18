@@ -20,7 +20,9 @@ def history(time_start, time_end, country):
     sql = """
     SELECT DISTINCT ON (played_at) played_at, rp_song_id, title, artist_name, album_title, spotify_track_id, spotify_album_img_small_url, spotify_album_img_large_url
      FROM (
-        SELECT date_trunc('second', h.played_at) AS played_at, s.rp_song_id, s.title, artist.name as artist_name, album.title as album_title, track.spotify_id AS spotify_track_id,
+        SELECT date_trunc('second', h.played_at) AS played_at, s.rp_song_id,
+               COALESCE(s.corrected_title, s.title) AS title,
+               artist.name as artist_name, album.title as album_title, track.spotify_id AS spotify_track_id,
                spot_album.img_small_url AS spotify_album_img_small_url, spot_album.img_large_url AS spotify_album_img_large_url,
                artist.id AS artist_id
          FROM rphistory_history h

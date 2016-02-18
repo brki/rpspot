@@ -174,7 +174,8 @@ class TrackSearch(object):
 
 
         and_artist_names, or_artist_names = self.map_artist_names(song.artists.all())
-        query = self.build_query(song.title, and_artist_names=and_artist_names, or_artist_names=or_artist_names)
+        title = song.corrected_title or song.title
+        query = self.build_query(title, and_artist_names=and_artist_names, or_artist_names=or_artist_names)
 
         results = self.get_query_results(query)
         self.add_full_album_info(results)
@@ -186,7 +187,7 @@ class TrackSearch(object):
         #       # TODO: update rphistory album title and artists info?
         for item in results:
             # If the artist or track are not found, no need to process this item.
-            track_info = self.extract_track_info(song.title, item)
+            track_info = self.extract_track_info(title, item)
             if track_info is None:
                 continue
 

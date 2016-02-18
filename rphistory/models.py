@@ -20,11 +20,12 @@ class Album(models.Model):
 
 class Song(models.Model):
     title = models.CharField(max_length=255, null=False)
+    corrected_title = models.CharField(max_length=255, null=True, blank=True)
     rp_song_id = models.IntegerField(unique=True, null=False)
     album = models.ForeignKey(Album, related_name='songs')
 
     def __str__(self):
-        return "<Song: {}>".format(self.title)
+        return "<Song: {}>".format(self.corrected_title or self.title)
 
 
 class History(models.Model):

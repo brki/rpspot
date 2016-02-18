@@ -117,7 +117,7 @@ class Command(BaseCommand):
             if not found:
                 artists = ','.join([artist.name for artist in song.artists.all()])
                 log.info("Not found: [{}] - {} (album: {}, asin: {})".format(
-                    artists, song.title, song.album.title, song.album.asin))
+                    artists, song.corrected_title or song.title, song.album.title, song.album.asin))
 
             TrackSearchHistory.objects.update_or_create(
                 rp_song=song,
