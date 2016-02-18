@@ -28,7 +28,7 @@ class Song(models.Model):
 
 
 class History(models.Model):
-    song = models.ForeignKey(Song)
+    song = models.ForeignKey(Song, related_name='history')
     played_at = models.DateTimeField(null=False, unique=True)
 
     def __str__(self):

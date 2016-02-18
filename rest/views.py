@@ -2,6 +2,7 @@ from rest_framework.decorators import api_view
 from rest_framework.exceptions import ParseError
 from rest_framework.response import Response
 from rest_framework import generics
+from django.db.models import Max
 from django.utils.dateparse import parse_datetime
 
 from rphistory.models import Song
@@ -47,14 +48,22 @@ class UnmatchedSongList(generics.ListAPIView):
     serializer_class = UnmatchedSongsSerializer
 
     def list(self, request, country):
-        order = request.query_params.get('order', 'id')
-        if order not in ['id', 'artists__name']:
+        order = request.query_params.get('order', None)
+        if order == 'artist':
+            order = 'artists__name'
+        elif order == 'played':
+            pass
+        else:
             order = 'id'
 
         queryset = self.get_queryset()
         queryset = queryset.exclude(pk__in=Song.objects.filter(available_tracks__country=country))
         queryset = queryset.prefetch_related('artists').select_related('album')
-        queryset = queryset.order_by(order)
+
+        if order == 'played':
+            queryset = queryset.annotate(max_history_id=Max('history')).order_by('-max_history_id')
+        else:
+            queryset = queryset.order_by(order)
 
         page = self.paginate_queryset(queryset)
         if page is not None:
