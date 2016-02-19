@@ -160,6 +160,12 @@ class TrackSearch(object):
         self.query_limit = query_limit
         self.max_items_to_process = max_items_to_process
 
+    def spotify_query(self, song):
+        and_artist_names, or_artist_names = self.map_artist_names(song.artists.all())
+        title = song.corrected_title or song.title
+        query = self.build_query(title, and_artist_names=and_artist_names, or_artist_names=or_artist_names)
+        return query, title, and_artist_names, or_artist_names
+
     def find_matching_tracks(self, song):
         """
         Gets the matching tracks that can be played per country.
@@ -172,10 +178,7 @@ class TrackSearch(object):
         #      between radio paradise and spotify.  It might be worth a second pass that tries to find
         #      a song whose name almost matches on the album, if the album can be matched.
 
-
-        and_artist_names, or_artist_names = self.map_artist_names(song.artists.all())
-        title = song.corrected_title or song.title
-        query = self.build_query(title, and_artist_names=and_artist_names, or_artist_names=or_artist_names)
+        query, title, and_artist_names, or_artist_names = self.spotify_query(song)
 
         results = self.get_query_results(query)
         self.add_full_album_info(results)
