@@ -1,0 +1,22 @@
+{% extends "site/base.html" %}
+{% load i18n %}
+{% load l10n %}
+{% load staticfiles %}
+
+{% block head_stylesheets %}
+    <link rel="stylesheet" href="{% static "stylesheets/jquery-ui.css"%}" />
+{% endblock %}
+
+{% block title %}
+    {% trans "Bye" noop %}
+{% endblock %}
+
+{% block content %}
+
+    <div class="main-content">
+        <div class="column small-12 small-centered">
+            {% trans "Bye!" noop %}
+        </div>
+    </div>
+
+{% endblock %}
