@@ -44,7 +44,7 @@ def extract_datetime_param(request, param_name):
 
 
 class UnmatchedSongList(generics.ListAPIView):
-    queryset = Song.objects.all()
+    queryset = Song.unmatched.all()
     serializer_class = UnmatchedSongsSerializer
 
     def list(self, request, country):
@@ -56,14 +56,7 @@ class UnmatchedSongList(generics.ListAPIView):
         else:
             order = 'id'
 
-        queryset = self.get_queryset()
-        queryset = queryset.exclude(pk__in=Song.objects.filter(available_tracks__country=country))
-        queryset = queryset.prefetch_related('artists').select_related('album')
-
-        if order == 'played':
-            queryset = queryset.annotate(max_history_id=Max('history')).order_by('-max_history_id')
-        else:
-            queryset = queryset.order_by(order)
+        queryset = self.get_queryset().in_country(country).artists().album().with_order_by(order)
 
         page = self.paginate_queryset(queryset)
         if page is not None:

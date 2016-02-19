@@ -18,11 +18,31 @@ class Album(models.Model):
         return "<Album: {} ({})>".format(self.title, self.release_year)
 
 
+class UnmatchedSongQuerySet(models.QuerySet):
+    def in_country(self, country):
+        return self.exclude(pk__in=Song.objects.filter(available_tracks__country=country))
+
+    def artists(self):
+        return self.prefetch_related('artists').select_related('album')
+
+    def album(self):
+        return self.select_related('album')
+
+    def with_order_by(self, order):
+        if order == 'played':
+            return self.annotate(last_played=models.Max('history__played_at')).order_by('-last_played')
+        else:
+            return self.order_by(order)
+
+
 class Song(models.Model):
     title = models.CharField(max_length=255, null=False)
     corrected_title = models.CharField(max_length=255, null=True, blank=True)
     rp_song_id = models.IntegerField(unique=True, null=False)
     album = models.ForeignKey(Album, related_name='songs')
+
+    objects = models.Manager()
+    unmatched = UnmatchedSongQuerySet.as_manager()
 
     def __str__(self):
         return "<Song: {}>".format(self.corrected_title or self.title)
