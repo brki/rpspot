@@ -109,9 +109,9 @@ class TrackSearch(object):
             'BÃ©la Fleck': ['Béla Fleck', 'Béla Fleck and the Flecktones'],
             'Béla Fleck': ['Béla Fleck', 'Béla Fleck and the Flecktones'],
             'Ben Harper': ['Ben Harper', 'Ben Harper And Relentless7'],
-            'Elvis Costello': ['Elvis Costello', 'Elvis Costello & The Attractions'],
+            'Elvis Costello': ['Elvis Costello', 'Elvis Costello & The Attractions', 'Elvis Costello And The Roots'],
             'Robyn Hitchcock': ['Robyn Hitchcock', 'Robyn Hitchcock & The Egyptians'],
-            'Easy Star All-Stars': ['Toots & The Maytals', 'Citizen Cope', 'The Meditations'], # see album: Radiodread
+            'Easy Star All-Stars': ['Toots & The Maytals', 'Citizen Cope', 'The Meditations'],  # see album: Radiodread
             'Raymond Kane': ['Raymond Kane', 'Ray Kane'],
             'Elephant Revival': ['Elephant Revival', 'Elephant Revivial'],
             '1 Giant Leap': ['Michael Stipe', 'Asha Bhosle'],
@@ -163,8 +163,14 @@ class TrackSearch(object):
     def spotify_query(self, song):
         and_artist_names, or_artist_names = self.map_artist_names(song.artists.all())
         title = song.corrected_title or song.title
-        query = self.build_query(title, and_artist_names=and_artist_names, or_artist_names=or_artist_names)
-        return query, title, and_artist_names, or_artist_names
+
+        # Split into several queries if there are more than two or_artist_names
+        query_info = []
+        for or_artist_group in [or_artist_names[i:i+2] for i in range(0, len(or_artist_names), 2)]:
+            query = self.build_query(title, and_artist_names=and_artist_names, or_artist_names=or_artist_names)
+            query_info.append((query, title, and_artist_names, or_artist_names))
+
+        return query_info
 
     def find_matching_tracks(self, song):
         """
@@ -178,37 +184,37 @@ class TrackSearch(object):
         #      between radio paradise and spotify.  It might be worth a second pass that tries to find
         #      a song whose name almost matches on the album, if the album can be matched.
 
-        query, title, and_artist_names, or_artist_names = self.spotify_query(song)
-
-        results = self.get_query_results(query)
-        self.add_full_album_info(results)
         best_matches = {}
         matches_score = {}
-        # TODO: check if any album_info matches were found.  If not, try to find album via asin.
-        #       If asin album found and title not the same as original album title used in query,
-        #       re-run query with asin album title and asin artists.
-        #       # TODO: update rphistory album title and artists info?
-        for item in results:
-            # If the artist or track are not found, no need to process this item.
-            track_info = self.extract_track_info(title, item)
-            if track_info is None:
-                continue
+        for query, title, and_artist_names, or_artist_names in self.spotify_query(song):
+            results = self.get_query_results(query)
+            self.add_full_album_info(results)
+            # TODO: check if any album_info matches were found.  If not, try to find album via asin.
+            #       If asin album found and title not the same as original album title used in query,
+            #       re-run query with asin album title and asin artists.
+            #       # TODO: update rphistory album title and artists info?
+            for item in results:
+                # If the artist or track are not found, no need to process this item.
+                track_info = self.extract_track_info(title, item)
+                if track_info is None:
+                    continue
 
-            artist_info = self.extract_artist_info(song, and_artist_names, or_artist_names, item['artists'])
-            if artist_info is None:
-                continue
+                artist_info = self.extract_artist_info(song, and_artist_names, or_artist_names, item['artists'])
+                if artist_info is None:
+                    continue
 
-            album_info = self.extract_album_info(song.album.title, song.album.release_year, item)
+                album_info = self.extract_album_info(song.album.title, song.album.release_year, item)
 
-            # Find the best match per country.
-            score = sum(info.match_score for info in [track_info, artist_info, album_info]) * 100
-            for country in item['available_markets']:
-                previous_score = matches_score.get(country, -1)
-                if score > previous_score:
-                    matches_score[country] = score
-                    best_matches[country] = TrackArtistAlbum(
-                        track_info=track_info, artist_info=artist_info, album_info=album_info
-                    )
+                # Find the best match per country.
+                score = sum(info.match_score for info in [track_info, artist_info, album_info]) * 100
+                for country in item['available_markets']:
+                    previous_score = matches_score.get(country, -1)
+                    if score > previous_score:
+                        matches_score[country] = score
+                        best_matches[country] = TrackArtistAlbum(
+                            track_info=track_info, artist_info=artist_info, album_info=album_info
+                        )
+
         return best_matches, matches_score
 
     def create_tracks(self, song, market_tracks, market_scores):
