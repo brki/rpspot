@@ -139,7 +139,7 @@ class TrackSearch(object):
     part_x_type2 = re.compile(' ?\((pt\.|part) (?P<part_number>\d+)\)')
 
     # Match things like "(w/ Markus Garvey)" and "feat. Jerry Garcia":
-    featuring_pattern = re.compile('\((w/|feat.|featuring) (?P<featuring>[^\)]+)\)')
+    featuring_pattern = re.compile('\((w/|feat\.?|featuring) (?P<featuring>[^\)]+)\)')
 
     contains_featuring_pattern = re.compile('^.*' + featuring_pattern.pattern + '.*$')
 
