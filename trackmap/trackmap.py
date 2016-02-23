@@ -104,23 +104,35 @@ class TrackSearch(object):
             'Vishwa Mohan Bhatt & Jerry Douglas': ['Vishwa Mohan Bhatt', 'Jerry Douglas'],
         },
         MAPPING_TYPE_ANY_OF: {
-            'Oliver Mtukudzi': ['Oliver Mtukudzi', 'Oliver Mtukudzi and The Black Spirits'],
-            'Ryan Adams': ['Ryan Adams', 'Ryan Adams & The Cardinals'],
-            'BÃ©la Fleck': ['Béla Fleck', 'Béla Fleck and the Flecktones'],
-            'Béla Fleck': ['Béla Fleck', 'Béla Fleck and the Flecktones'],
-            'Ben Harper': ['Ben Harper', 'Ben Harper And Relentless7'],
-            'Elvis Costello': ['Elvis Costello', 'Elvis Costello & The Attractions', 'Elvis Costello And The Roots'],
-            'Robyn Hitchcock': ['Robyn Hitchcock', 'Robyn Hitchcock & The Egyptians'],
-            'Easy Star All-Stars': ['Toots & The Maytals', 'Citizen Cope', 'The Meditations'],  # see album: Radiodread
-            'Raymond Kane': ['Raymond Kane', 'Ray Kane'],
-            'Elephant Revival': ['Elephant Revival', 'Elephant Revivial'],
-            '1 Giant Leap': ['Michael Stipe', 'Asha Bhosle'],
+            # These will be used when comparing the results returned from Spotify:
+            'compare': {
+                'Oliver Mtukudzi': ['Oliver Mtukudzi', 'Oliver Mtukudzi and The Black Spirits'],
+                'Ryan Adams': ['Ryan Adams', 'Ryan Adams & The Cardinals'],
+                'BÃ©la Fleck': ['Béla Fleck', 'Béla Fleck and the Flecktones'],
+                'Béla Fleck': ['Béla Fleck', 'Béla Fleck and the Flecktones'],
+                'Ben Harper': ['Ben Harper', 'Ben Harper And Relentless7'],
+                'Elvis Costello': ['Elvis Costello', 'Elvis Costello & The Attractions', 'Elvis Costello And The Roots'],
+                'Robyn Hitchcock': ['Robyn Hitchcock', 'Robyn Hitchcock & The Egyptians'],
+                'Easy Star All-Stars': ['Toots & The Maytals', 'Citizen Cope', 'The Meditations'],  # see album: Radiodread
+                'Raymond Kane': ['Raymond Kane', 'Ray Kane'],
+                'Elephant Revival': ['Elephant Revival', 'Elephant Revivial'],
+                '1 Giant Leap': ['Michael Stipe', 'Asha Bhosle'],
+            },
+            # These are used when searching Spotify; a separate search will be made for each separate name:
+            'search': {
+                # Note: no need to add alternates if the alternates also start with the same name, because
+                #       Spotify will also match 'foo bar' if searching for an artist named 'foo'.
+                'Easy Star All-Stars': ['Toots & The Maytals', 'Citizen Cope', 'The Meditations'],  # see album: Radiodread
+                'Raymond Kane': ['Raymond Kane', 'Ray Kane'],
+                'Elephant Revival': ['Elephant Revival', 'Elephant Revivial'],
+                '1 Giant Leap': ['Michael Stipe', 'Asha Bhosle'],
+            }
         },
         REPLACE_FOR_SEARCH_ONLY: {
-            '10,000 Maniacs': 'Maniacs'  # Strange, but Spotify doesn't find it with 10000 Maniacs.
-        }
+            '10,000 Maniacs': 'Maniacs',  # Strange, but Spotify doesn't find it with 10000 Maniacs.
+            'BÃ©la Fleck': 'Béla Fleck',
+        },
     }
-
 
 
     # Characters that can be stripped when comparing possible matches:
@@ -161,14 +173,19 @@ class TrackSearch(object):
         self.max_items_to_process = max_items_to_process
 
     def spotify_query(self, song):
-        and_artist_names, or_artist_names = self.map_artist_names(song.artists.all())
+        and_artist_names_for_search, or_artist_names_for_search = self.map_artist_names(song.artists.all(), 'search')
+        and_artist_names_for_compare, or_artist_names_for_compare = self.map_artist_names(song.artists.all(), 'compare')
         title = song.corrected_title or song.title
 
-        # Split into several queries if there are more than two or_artist_names
+        # Query each possible or_artist_name separately, because an OR clause does not apply to only the artist names,
+        # but instead seems to make all elements including the song, be considered as OR-ed elements.
         query_info = []
-        for or_artist_group in [or_artist_names[i:i+2] for i in range(0, len(or_artist_names), 2)]:
-            query = self.build_query(title, and_artist_names=and_artist_names, or_artist_names=or_artist_names)
-            query_info.append((query, title, and_artist_names, or_artist_names))
+        for artist_name in or_artist_names_for_search:
+            query = self.build_query(title, [artist_name])
+            query_info.append((query, title, and_artist_names_for_compare, or_artist_names_for_compare))
+        if and_artist_names_for_search:
+            query = self.build_query(title, and_artist_names_for_search)
+            query_info.append((query, title, and_artist_names_for_compare, or_artist_names_for_compare))
 
         return query_info
 
@@ -262,7 +279,7 @@ class TrackSearch(object):
         search_artist = self.prepare_text_for_search(search_artist)
         return 'artist:"{}"'.format(search_artist)
 
-    def build_query(self, track_title, and_artist_names=None, or_artist_names=None, album_title=None):
+    def build_query(self, track_title, artist_names=None, album_title=None):
         """
         Builds a query based on the passed values.
 
@@ -278,12 +295,8 @@ class TrackSearch(object):
         search_track = self.prepare_text_for_search(search_track)
         q = ['track:"{}"'.format(search_track)]
 
-        if or_artist_names:
-            q.append(self.artist_query_fragment(or_artist_names[0]))
-            q.append("OR")
-            q.append(self.artist_query_fragment(or_artist_names[1]))
-        elif and_artist_names:
-            for name in and_artist_names:
+        if artist_names:
+            for name in artist_names:
                 q.append(self.artist_query_fragment(name))
 
         if album_title:
@@ -549,16 +562,18 @@ class TrackSearch(object):
                 obj.full_clean(exclude=clean_exclude, validate_unique=False)
         return obj
 
-    def map_artist_names(self, artists):
+    # TODO: should these be managed in the DB?
+    def map_artist_names(self, artists, for_action):
         """
         Replace Radio Paradise name with Spotify name for some artists that are named differently by the two services.
 
-        The return tuple allows the caller to know whether an OR query should be used.
-
-        :param iterable of Artist objects
+        :param artists: iterable of Artist objects
+        :param str for_action: 'search' or 'compare'
         :return: tuple: (and_artists, or_artists)
         """
-        # TODO: should these be managed in the DB?
+        if for_action not in ['compare', 'search']:
+            raise ValueError("for_action parameter must be 'compare' or 'search'")
+
         and_artists = []
         or_artists = []
         for artist in artists:
@@ -572,7 +587,7 @@ class TrackSearch(object):
                 and_artists += mapped
                 continue
 
-            mapped = self.rp_to_spotify_artist_map[self.MAPPING_TYPE_ANY_OF].get(artist.name)
+            mapped = self.rp_to_spotify_artist_map[self.MAPPING_TYPE_ANY_OF][for_action].get(artist.name)
             if mapped is not None:
                 or_artists += mapped
                 continue
@@ -602,7 +617,7 @@ class TrackSearch(object):
         plain_text = self.remove_part_x(plain_text)
         plain_text = self.remove_featuring(plain_text, leave_feature=False)
         plain_text = self.search_strip_chars_pattern.sub('', plain_text)
-        return plain_text
+        return plain_text.strip()
 
     def remove_leading_article(self, text):
         """
