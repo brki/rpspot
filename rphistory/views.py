@@ -33,7 +33,8 @@ def unmatched(request, country, page=1):
         )
         query_string = urlencode({'q': search_string})
         rp_url = 'https://www.radioparadise.com/rp_2.php?#name=songinfo&song_id={}'.format(s.rp_song_id)
-        spotify_query, _, _, _ = track_search.spotify_query(s)
+        query_info = track_search.spotify_query(s)
+        spotify_query = " / ".join([query for query, _, _, _ in query_info])
 
         song.append({'label': 'Artists', 'value': artist_list, 'type': 'text'})
         song.append({'label': 'Title', 'value': s.title, 'type': 'text'})
