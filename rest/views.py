@@ -1,31 +1,30 @@
+from datetime import timedelta
 from rest_framework.decorators import api_view
-from rest_framework.exceptions import ParseError
+from rest_framework.exceptions import ParseError, ValidationError
 from rest_framework.response import Response
 from rest_framework import generics
-from django.db.models import Max
 from django.utils.dateparse import parse_datetime
 
 from rphistory.models import Song
 from .models import history as json_history
 from .serializers import UnmatchedSongsSerializer
-from .util import utc_now, day_period
+from .util import utc_now, get_valid_period
 
 
 @api_view()
-def history(request, country, start_time=None, end_time=None):
+def history(request, country):
     start_time = extract_datetime_param(request, 'start_time')
     end_time = extract_datetime_param(request, 'end_time')
+    try:
+        start, end = get_valid_period(start_time, end_time)
+    except ValueError as e:
+        raise ValidationError({'error': str(e)})
 
-    if start_time and end_time:
-        raise ParseError("Only one of start_time or end_time should be provided")
-    if start_time is None and end_time is None:
-        end_time = utc_now()
-
-    start, end = day_period(start_time, end_time)
     data = json_history(start, end, country)
     response = Response(data)
     response['Content-Length'] = len(data)
     return Response(data)
+
 
 def extract_datetime_param(request, param_name):
     time = request.query_params.get(param_name, None)
