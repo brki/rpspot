@@ -1,4 +1,7 @@
+import datetime
 from urllib.parse import urlencode
+
+from django.db.models import Q
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from trackmap import trackmap
@@ -15,6 +18,11 @@ def unmatched(request, country=None, page=1):
     else:
         order = 'played'
 
+    min_time_since_last_manual_check = request.GET.get('last_manual', None)
+    if min_time_since_last_manual_check is not None:
+        min_time_since_last_manual_check = int(min_time_since_last_manual_check)
+
+
     page = max(int(page), 1)
     page_size = 100
     start = page_size * (page - 1)
@@ -24,6 +32,14 @@ def unmatched(request, country=None, page=1):
         qs = Song.unmatched.in_country(country)
     else:
         qs = Song.unmatched.no_match_in_any_country()
+
+    if min_time_since_last_manual_check is not None:
+        since = datetime.datetime.now() - datetime.timedelta(days=min_time_since_last_manual_check)
+        qs = qs.filter(
+            Q(search_history__last_manual_check__isnull=True) |
+            Q(search_history__last_manual_check__lte=since)
+        )
+
     qs = qs.artists().album().search_history().with_order_by(order)[start:end]
 
     track_search = trackmap.TrackSearch()
