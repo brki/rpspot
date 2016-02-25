@@ -139,7 +139,8 @@ class TrackSearch(object):
     strip_chars_pattern = re.compile('[{}]'.format(re.escape(string.punctuation + ' ')))
 
     # Characters that can be stripped when querying Spotify for a match:
-    search_strip_chars_pattern = re.compile('[{}]'.format(re.escape(string.punctuation.replace('-', '').replace('&', ''))))
+    search_strip_chars_pattern = re.compile('[{}]'.format(
+        re.escape(string.punctuation.replace('-', '').replace('&', '').replace('$', '').replace('#', ''))))
 
     # Match things like ", part 2":
     part_x_pattern = re.compile(',? (\((pt\.|part) \d+\)|(pt\.|part \d+))')
