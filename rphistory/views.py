@@ -24,7 +24,7 @@ def unmatched(request, country=None, page=1):
         qs = Song.unmatched.in_country(country)
     else:
         qs = Song.unmatched.no_match_in_any_country()
-    qs = qs.artists().album().with_order_by(order)[start:end]
+    qs = qs.artists().album().search_history().with_order_by(order)[start:end]
 
     track_search = trackmap.TrackSearch()
 
@@ -51,6 +51,8 @@ def unmatched(request, country=None, page=1):
             song.append({'label': 'Last played', 'value': s.last_played, 'type': 'text'})
         song.append({'label': 'RP URL', 'value': rp_url, 'type': 'url'})
         song.append({'label': 'rp_song_id', 'value': s.rp_song_id, 'type': 'text'})
+        song.append({'label': 'song id', 'value': s.id, 'type': 'text'})
+        song.append({'label': 'last manual check', 'value': s.search_history.last_manual_check, 'type': 'text'})
         song.append({'label': 'Spotify query', 'value': spotify_query, 'type': 'text'})
         song.append({'label': 'ASIN', 'value': 'http://www.amazon.com/exec/obidos/ASIN/{}'.format(s.album.asin), 'type': 'url'})
         song.append({'label': 'Google it', 'value': 'https://google.com/search?{}'.format(query_string), 'type': 'url'})

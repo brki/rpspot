@@ -33,6 +33,9 @@ class UnmatchedSongQuerySet(models.QuerySet):
     def album(self):
         return self.select_related('album')
 
+    def search_history(self):
+        return self.select_related('search_history')
+
     def with_order_by(self, order):
         if order == 'played':
             return self.annotate(last_played=models.Max('history__played_at')).order_by('-last_played')

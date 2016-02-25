@@ -106,6 +106,7 @@ class TrackSearchHistory(models.Model):
     rp_song = models.OneToOneField('rphistory.Song', related_name="search_history")
     search_time = models.DateTimeField(null=False)
     found = models.BooleanField(default=False)
+    last_manual_check = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         return "<TrackSearchHistory>: {} (rp_song_id: {}) (found: {}) (id: {})".format(
