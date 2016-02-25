@@ -1,4 +1,5 @@
 from django.db import models
+from django.apps import apps
 
 
 class Artist(models.Model):
@@ -21,6 +22,10 @@ class Album(models.Model):
 class UnmatchedSongQuerySet(models.QuerySet):
     def in_country(self, country):
         return self.exclude(pk__in=Song.objects.filter(available_tracks__country=country))
+
+    def no_match_in_any_country(self):
+        TrackAvailability = apps.get_model('trackmap', 'TrackAvailability')
+        return self.exclude(pk__in=TrackAvailability.objects.values_list('rp_song_id', flat=True).distinct())
 
     def artists(self):
         return self.prefetch_related('artists').select_related('album')

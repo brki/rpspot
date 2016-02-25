@@ -6,7 +6,7 @@ from .models import Song
 
 
 @login_required
-def unmatched(request, country, page=1):
+def unmatched(request, country=None, page=1):
     order = request.GET.get('order', None)
     if order == 'artist':
         order = 'artists__name'
@@ -20,8 +20,14 @@ def unmatched(request, country, page=1):
     start = page_size * (page - 1)
     end = page_size * page
 
+    if country:
+        qs = Song.unmatched.in_country(country)
+    else:
+        qs = Song.unmatched.no_match_in_any_country()
+    qs = qs.artists().album().with_order_by(order)[start:end]
+
     track_search = trackmap.TrackSearch()
-    qs = Song.unmatched.in_country(country).artists().album().with_order_by(order)[start:end]
+
     songs = []
     for s in qs:
         song = []

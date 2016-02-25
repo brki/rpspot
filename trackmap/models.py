@@ -1,6 +1,7 @@
 from logging import getLogger, DEBUG
 from django.db import models
-from rphistory.models import Song, History
+from django.apps import apps
+
 from trackmap import trackmap_cache
 
 
@@ -21,6 +22,7 @@ class Album(models.Model):
 class TrackManager(models.Manager):
     def get_available_tracks(self, country, start_time=None, limit=15):
 
+        History = apps.get_model('rphistory', 'History')
         params = {'country': country, 'limit': limit}
         if start_time:
             order_direction = 'ASC'
@@ -87,7 +89,7 @@ class TrackAvailabilityManager(models.Manager):
 
 class TrackAvailability(models.Model):
     track = models.ForeignKey(Track)
-    rp_song = models.ForeignKey(Song, related_name="available_tracks")
+    rp_song = models.ForeignKey('rphistory.Song', related_name="available_tracks")
     country = models.CharField(max_length=2, db_index=True)
     score = models.IntegerField(default=0)
     objects = TrackAvailabilityManager()
@@ -101,7 +103,7 @@ class TrackAvailability(models.Model):
 
 
 class TrackSearchHistory(models.Model):
-    rp_song = models.OneToOneField(Song, related_name="search_history")
+    rp_song = models.OneToOneField('rphistory.Song', related_name="search_history")
     search_time = models.DateTimeField(null=False)
     found = models.BooleanField(default=False)
 
@@ -118,7 +120,7 @@ class HandmappedTrack(models.Model):
     # * the info from e.g. amazon with album, author(s), song titles
     # The user could then say, OK, the correct artist(s)/album/song name is ..., and this data can be updated
     # in the rphistory schema, and map_tracks can be re-run to find country-specific tracks.
-    rp_song = models.OneToOneField(Song, related_name="handmapped_track")
+    rp_song = models.OneToOneField('rphistory.Song', related_name="handmapped_track")
 #    spotify_album_id = models.CharField(max_length=120, help_text="Spotify album id")
     info_url = models.CharField(max_length=255, blank=True, help_text="URL to resource with information about album")
     processed = models.BooleanField(default=False)
