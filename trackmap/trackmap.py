@@ -164,7 +164,7 @@ class TrackSearch(object):
     live_pattern = re.compile(r'^(.*?)(live|acoustic)$')
 
     # Match text like .*(\(live|acoustic\))
-    live_raw_pattern = re.compile(r'^(.*?)\s*\(\s*(live|acoustic)\s*\)\s*$')
+    live_raw_pattern = re.compile(r'^(.*?)\s*\(\s*(live|acoustic)\s*\)\s*$', re.IGNORECASE)
 
     # Match text like .*(live|acoustic)
     unplugged_pattern = re.compile(r'^(.*?)((mtvunplugged(version)?)|unpluggedversion)$')
@@ -468,7 +468,17 @@ class TrackSearch(object):
             # Retry without the "featuring" text
             track_simple = self.simplified_text(track_title, leave_feature=False)
             match_score = self.track_info_match(track_title, track_simple, item_track_simple)
-            match_score -= 0.1
+            if match_score:
+                match_score -= 0.1
+
+        if not match_score:
+            stripped = self.strip_live_marker(track_title)
+            if stripped != track_title:
+                # Retry without the "live" text
+                track_simple = self.simplified_text(stripped, leave_feature=False)
+                match_score = self.track_info_match(track_title, track_simple, item_track_simple)
+                if match_score:
+                    match_score -= 0.2
 
         if match_score > 0:
             return TrackInfo(id=item['id'], title=item['name'], match_score=match_score)
