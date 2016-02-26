@@ -105,6 +105,7 @@ class TrackSearch(object):
             'Leftover Salmon & Cracker': ['Leftover Salmon', 'Cracker'],
             'Robert Plant & Alison Krauss': ['Robert Plant', 'Alison Krauss'],
             'Vishwa Mohan Bhatt & Jerry Douglas': ['Vishwa Mohan Bhatt', 'Jerry Douglas'],
+            'Willie and Lobo': ['Willie', 'Lobo'],
         },
         MAPPING_TYPE_ANY_OF: {
             # These will be used when comparing the results returned from Spotify:
