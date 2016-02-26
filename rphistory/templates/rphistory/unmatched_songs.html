@@ -26,7 +26,7 @@
                             </div>
                             <div class="small-9 large-8 columns">
                                 {% if data.type == 'url' %}
-                                    <a href="{{ data.value | safe }}">{{ data.value }}</a>
+                                    <a target="_blank" href="{{ data.value | safe }}">{{ data.value }}</a>
                                 {% elif data.type == 'actions_info'%}
                                     <p>
                                         <form action="{{ data.value.checked_action_url | safe }}" method="POST">
