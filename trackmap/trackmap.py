@@ -83,6 +83,7 @@ class TrackSearch(object):
             'Ali Farka Touré & Ry Cooder': ['Ali Farka Touré', 'Ry Cooder'],
             'Ali Farka Touré & Toumani Diabeté': ['Ali Farka Touré', 'Toumani Diabeté'],
             'Alison Krauss & Gillian Welch': ['Alison Krauss', 'Gillian Welch'],
+            'Anoushka Shankar & Karsh Kale': ['Anoushka Shankar', 'Karsh Kale'],
             'B.B. King & Dr. John': ['B.B. King', 'Dr. John'],
             'B.B. King & Mick Hucknall': ['B.B. King', 'Mick Hucknall'],
             'B.B. King & Tracy Chapman': ['B.B. King', 'Tracy Chapman'],
