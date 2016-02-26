@@ -113,6 +113,7 @@ class TrackSearch(object):
                 'BÃ©la Fleck': ['Béla Fleck', 'Béla Fleck and the Flecktones'],
                 'Béla Fleck': ['Béla Fleck', 'Béla Fleck and the Flecktones'],
                 'Ben Harper': ['Ben Harper', 'Ben Harper And Relentless7'],
+                'Josh Joplin Group': ['Josh Joplin', 'Josh Joplin Group'],
                 'Elvis Costello': ['Elvis Costello', 'Elvis Costello & The Attractions', 'Elvis Costello And The Roots'],
                 'Robyn Hitchcock': ['Robyn Hitchcock', 'Robyn Hitchcock & The Egyptians'],
                 'Easy Star All-Stars': ['Toots & The Maytals', 'Citizen Cope', 'The Meditations'],  # see album: Radiodread
