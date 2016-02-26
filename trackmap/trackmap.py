@@ -42,6 +42,10 @@ def chunks(l, n):
     return [l[i:i + n] for i in range(0, len(l), n)]
 
 
+# TODO: map multiple song "songs" played on rp to multiple songs.
+# Examples: rp_song_ids: 33058 (Yes), 38699 (Led Zep)
+
+
 class TrackSearch(object):
 
     # There are three cases a radioparadise artist name to be mapped to multiple spotify artist names:
@@ -77,6 +81,7 @@ class TrackSearch(object):
             'Sonny Boy Williamson': 'Sonny Boy Williamson II',
             'The English Beat': 'The Beat',
             'Trail of Dead': '...And You Will Know Us By The Trail Of Dead',
+            'Woven Hand': 'Wovenhand',
         },
         MAPPING_TYPE_ONE_TO_MANY: {
             'Albert King & Stevie Ray Vaughan': ['Albert King', 'Stevie Ray Vaughan'],
