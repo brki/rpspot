@@ -134,6 +134,7 @@ class TrackSearch(object):
         REPLACE_FOR_SEARCH_ONLY: {
             '10,000 Maniacs': 'Maniacs',  # Strange, but Spotify doesn't find it with 10000 Maniacs.
             'BÃ©la Fleck': 'Béla Fleck',
+            'Josh Joplin Group': 'Josh Joplin',
         },
     }
 
