@@ -1,6 +1,6 @@
 from django.conf.urls import include, url
 
-from .views import unmatched, manually_checked
+from .views import unmatched, manually_checked, retry
 
 
 urlpatterns = [
@@ -10,4 +10,5 @@ urlpatterns = [
     url(r'^unmatched/(?P<country>[A-Z]{2})/(?P<page>[0-9]{1,5})/$', unmatched, name='unmatched_page_html'),
 
     url(r'^unmatched/checked/(?P<song_id>\d+)/$', manually_checked, name='manually_checked'),
+    url(r'^unmatched/retry/(?P<song_id>\d+)/$', retry, name='retry'),
 ]

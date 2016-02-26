@@ -1,6 +1,7 @@
 import datetime
 from urllib.parse import urlencode
 
+from django.core.management import call_command
 from django.core.urlresolvers import reverse
 from django.db.models import Q
 from django.http import HttpResponse
@@ -10,6 +11,16 @@ from django.views.decorators.http import require_POST
 from trackmap import trackmap
 from .models import Song
 from trackmap.models import TrackSearchHistory
+
+
+def redirect_or_text_response(request, text="Thanks"):
+    redirect_to = request.POST.get('redirect_to', None)
+    if redirect_to:
+        if not redirect_to.startswith('/history/unmatched/'):
+            raise ValueError('invalid redirect_to value')
+        return redirect(redirect_to)
+
+    return HttpResponse(text)
 
 
 @login_required
@@ -78,9 +89,10 @@ def unmatched(request, country=None, page=1):
         song.append({'label': 'Google it', 'value': 'https://google.com/search?{}'.format(query_string), 'type': 'url'})
 
         action_info = {
-            'song_id': s.id,
             'checked_action_url': reverse('manually_checked', args=[s.id]),
-            'checked_link_text': 'Mark checked',
+            'checked_button_text': 'Mark checked',
+            'retry_action_url': reverse('retry', args=[s.id]),
+            'retry_button_text': 'Retry search',
             'redirect_url': request.get_full_path(),
         }
         song.append({'label': 'Actions', 'value': action_info, 'type': 'actions_info'})
@@ -97,11 +109,14 @@ def manually_checked(request, song_id):
     search_history.last_manual_check = datetime.datetime.now()
     search_history.save()
 
+    return redirect_or_text_response(request)
 
-    redirect_to = request.POST.get('redirect_to', None)
-    if redirect_to:
-        if not redirect_to.startswith('/history/unmatched/'):
-            raise ValueError('invalid redirect_to value')
-        return redirect(redirect_to)
 
-    return HttpResponse("Thanks")
+@login_required
+@require_POST
+def retry(request, song_id):
+    song = get_object_or_404(Song, pk=song_id)
+
+    call_command('map_tracks', force=True, rp_song_id=song.rp_song_id)
+
+    return redirect_or_text_response(request)

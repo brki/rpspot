@@ -28,11 +28,20 @@
                                 {% if data.type == 'url' %}
                                     <a href="{{ data.value | safe }}">{{ data.value }}</a>
                                 {% elif data.type == 'actions_info'%}
-                                    <form action="{{ data.value.checked_action_url | safe }}" method="POST">
-                                    {% csrf_token %}
-                                    <input type="submit" value="{{ data.value.checked_link_text }}" />
-                                    <input type="hidden" name="redirect_to" value="{{ data.value.redirect_url | safe }}" />
-                                    </form>
+                                    <p>
+                                        <form action="{{ data.value.checked_action_url | safe }}" method="POST">
+                                            {% csrf_token %}
+                                            <input type="submit" value="{{ data.value.checked_button_text }}" />
+                                            <input type="hidden" name="redirect_to" value="{{ data.value.redirect_url | safe }}" />
+                                        </form>
+                                    </p>
+                                    <p>
+                                        <form action="{{ data.value.retry_action_url | safe }}" method="POST">
+                                            {% csrf_token %}
+                                            <input type="submit" value="{{ data.value.retry_button_text }}" />
+                                            <input type="hidden" name="redirect_to" value="{{ data.value.redirect_url | safe }}" />
+                                        </form>
+                                    </p>
                                 {% else %}
                                     <span id="right-label">{{ data.value }}</span>
                                 {% endif %}
