@@ -14,6 +14,18 @@
 
 
 {% block content %}
+    <div class="row">
+        <div class="small-8 large-12 columns">
+            <div class="row">
+                <div class="small-3 large-4 columns">
+                    <span class="right inline">Total unmatched: </span>
+                </div>
+                <div class="small-9 large-8 columns">
+                    <span id="unmatched_count">{{ unmatched_count }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
         {% for song in songs %}
             <hr>
             {% autoescape on %}
@@ -22,7 +34,7 @@
                     <div class="small-8 large-12 columns">
                         <div class="row">
                             <div class="small-3 large-4 columns">
-                                <label for="right-label" class="right inline">{{ data.label | safe }}</label>
+                                <span class="right inline">{{ data.label | safe }}</span>
                             </div>
                             <div class="small-9 large-8 columns">
                                 {% if data.type == 'url' %}
@@ -51,7 +63,7 @@
                                     </form>
                                     </p>
                                 {% else %}
-                                    <span id="right-label">{{ data.value }}</span>
+                                    <span id="{{ data.id }}">{{ data.value }}</span>
                                 {% endif %}
                             </div>
                         </div>

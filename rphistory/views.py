@@ -55,6 +55,7 @@ def unmatched(request, country=None, page=1):
             Q(search_history__last_manual_check__lte=since)
         )
 
+    unmatched_count = qs.count()
     qs = qs.artists().album().search_history().with_order_by(order)[start:end]
 
     track_search = trackmap.TrackSearch()
@@ -73,20 +74,20 @@ def unmatched(request, country=None, page=1):
         query_info = track_search.spotify_query(s)
         spotify_query = " / ".join([query for query, _, _, _ in query_info])
 
-        song.append({'label': 'Artists', 'value': artist_list, 'type': 'text'})
-        song.append({'label': 'Title', 'value': s.title, 'type': 'text'})
+        song.append({'label': 'Artists', 'value': artist_list, 'type': 'text', 'id': 'artists_name'})
+        song.append({'label': 'Title', 'value': s.title, 'type': 'text', 'id': 'song_title'})
         if s.corrected_title:
-            song.append({'label': 'Corrected title', 'value': s.corrected_title, 'type': 'text'})
-        song.append({'label': 'Album', 'value': s.album.title, 'type': 'text'})
+            song.append({'label': 'Corrected title', 'value': s.corrected_title, 'type': 'text', 'id': 'corrected_title_static'})
+        song.append({'label': 'Album', 'value': s.album.title, 'type': 'text', 'id': 'album_title'})
         if hasattr(s, 'last_played'):
-            song.append({'label': 'Last played', 'value': s.last_played, 'type': 'text'})
-        song.append({'label': 'RP URL', 'value': rp_url, 'type': 'url'})
-        song.append({'label': 'rp_song_id', 'value': s.rp_song_id, 'type': 'text'})
-        song.append({'label': 'song id', 'value': s.id, 'type': 'text'})
-        song.append({'label': 'last manual check', 'value': s.search_history.last_manual_check, 'type': 'text'})
-        song.append({'label': 'Spotify query', 'value': spotify_query, 'type': 'text'})
-        song.append({'label': 'ASIN', 'value': 'http://www.amazon.com/exec/obidos/ASIN/{}'.format(s.album.asin), 'type': 'url'})
-        song.append({'label': 'Google it', 'value': 'https://google.com/search?{}'.format(query_string), 'type': 'url'})
+            song.append({'label': 'Last played', 'value': s.last_played, 'type': 'text', 'id': 'last_played'})
+        song.append({'label': 'RP URL', 'value': rp_url, 'type': 'url', 'id': 'rp_url'})
+        song.append({'label': 'rp_song_id', 'value': s.rp_song_id, 'type': 'text', 'id': 'rp_song_id'})
+        song.append({'label': 'song id', 'value': s.id, 'type': 'text', 'id': 'song_id'})
+        song.append({'label': 'last manual check', 'value': s.search_history.last_manual_check, 'type': 'text', 'id': 'last_manual_check'})
+        song.append({'label': 'Spotify query', 'value': spotify_query, 'type': 'text', 'id': 'spotify_query'})
+        song.append({'label': 'ASIN', 'value': 'http://www.amazon.com/exec/obidos/ASIN/{}'.format(s.album.asin), 'type': 'url', 'id': 'asin'})
+        song.append({'label': 'Google it', 'value': 'https://google.com/search?{}'.format(query_string), 'type': 'url', 'id': 'google_it'})
 
         action_info = {
             'checked_action_url': reverse('manually_checked', args=[s.id]),
@@ -98,11 +99,11 @@ def unmatched(request, country=None, page=1):
             'song_title': s.title,
             'redirect_url': request.get_full_path(),
         }
-        song.append({'label': 'Actions', 'value': action_info, 'type': 'actions_info'})
+        song.append({'label': 'Actions', 'value': action_info, 'type': 'actions_info', 'id': 'action_list'})
 
         songs.append(song)
 
-    return render(request, 'rphistory/unmatched_songs.html', {'songs': songs})
+    return render(request, 'rphistory/unmatched_songs.html', {'songs': songs, 'unmatched_count': unmatched_count})
 
 
 @login_required
