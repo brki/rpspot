@@ -93,6 +93,9 @@ def unmatched(request, country=None, page=1):
             'checked_button_text': 'Mark checked',
             'retry_action_url': reverse('retry', args=[s.id]),
             'retry_button_text': 'Retry search',
+            'correct_title_action_url': reverse('correct_title', args=[s.id]),
+            'correct_title_button_text': 'Correct title / retry search',
+            'song_title': s.title,
             'redirect_url': request.get_full_path(),
         }
         song.append({'label': 'Actions', 'value': action_info, 'type': 'actions_info'})
@@ -116,6 +119,23 @@ def manually_checked(request, song_id):
 @require_POST
 def retry(request, song_id):
     song = get_object_or_404(Song, pk=song_id)
+
+    call_command('map_tracks', force=True, rp_song_id=song.rp_song_id)
+
+    return redirect_or_text_response(request)
+
+
+@login_required
+@require_POST
+def correct_title(request, song_id):
+    song = get_object_or_404(Song, pk=song_id)
+    correct_title = request.POST.get('correct_title', None)
+
+    if correct_title in [song.title, song.corrected_title]:
+        return HttpResponse("Song already has this title")
+
+    song.corrected_title = correct_title.strip()
+    song.save()
 
     call_command('map_tracks', force=True, rp_song_id=song.rp_song_id)
 
