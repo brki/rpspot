@@ -1,11 +1,15 @@
 import datetime
 from urllib.parse import urlencode
 
+from django.core.urlresolvers import reverse
 from django.db.models import Q
-from django.shortcuts import render
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_POST
 from trackmap import trackmap
 from .models import Song
+from trackmap.models import TrackSearchHistory
 
 
 @login_required
@@ -73,6 +77,31 @@ def unmatched(request, country=None, page=1):
         song.append({'label': 'ASIN', 'value': 'http://www.amazon.com/exec/obidos/ASIN/{}'.format(s.album.asin), 'type': 'url'})
         song.append({'label': 'Google it', 'value': 'https://google.com/search?{}'.format(query_string), 'type': 'url'})
 
+        action_info = {
+            'song_id': s.id,
+            'checked_action_url': reverse('manually_checked', args=[s.id]),
+            'checked_link_text': 'Mark checked',
+            'redirect_url': request.get_full_path(),
+        }
+        song.append({'label': 'Actions', 'value': action_info, 'type': 'actions_info'})
+
         songs.append(song)
 
     return render(request, 'rphistory/unmatched_songs.html', {'songs': songs})
+
+
+@login_required
+@require_POST
+def manually_checked(request, song_id):
+    search_history = get_object_or_404(TrackSearchHistory, rp_song_id=song_id)
+    search_history.last_manual_check = datetime.datetime.now()
+    search_history.save()
+
+
+    redirect_to = request.POST.get('redirect_to', None)
+    if redirect_to:
+        if not redirect_to.startswith('/history/unmatched/'):
+            raise ValueError('invalid redirect_to value')
+        return redirect(redirect_to)
+
+    return HttpResponse("Thanks")
