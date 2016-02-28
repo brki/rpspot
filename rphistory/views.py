@@ -74,10 +74,10 @@ def unmatched(request, country=None, page=1):
         query_info = track_search.spotify_query(s)
         spotify_query = " / ".join([query for query, _, _, _ in query_info])
 
-        song.append({'label': 'Artists', 'value': artist_list, 'type': 'text', 'id': 'artists_name'})
         song.append({'label': 'Title', 'value': s.title, 'type': 'text', 'id': 'song_title'})
         if s.corrected_title:
             song.append({'label': 'Corrected title', 'value': s.corrected_title, 'type': 'text', 'id': 'corrected_title_static'})
+        song.append({'label': 'Artists', 'value': artist_list, 'type': 'text', 'id': 'artists_name'})
         song.append({'label': 'Album', 'value': s.album.title, 'type': 'text', 'id': 'album_title'})
         if hasattr(s, 'last_played'):
             song.append({'label': 'Last played', 'value': s.last_played, 'type': 'text', 'id': 'last_played'})
@@ -96,7 +96,7 @@ def unmatched(request, country=None, page=1):
             'retry_button_text': 'Retry search',
             'correct_title_action_url': reverse('correct_title', args=[s.id]),
             'correct_title_button_text': 'Correct title / retry search',
-            'song_title': s.title,
+            'song_title': s.corrected_title or s.title,
             'redirect_url': request.get_full_path(),
         }
         song.append({'label': 'Actions', 'value': action_info, 'type': 'actions_info', 'id': 'action_list'})

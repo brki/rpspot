@@ -77,6 +77,7 @@ class TrackSearch(object):
             'Ihtiyac Molasi': 'İhtiyaç Molası',
             'Iron & Wine and Calexico': 'Calexico / Iron and Wine',
             'Khachaturian': 'Aram Khachaturian',
+            'Santana Brothers': 'Santana',
             'Sixteen Horsepower': '16 Horsepower',
             'Sonny Boy Williamson': 'Sonny Boy Williamson II',
             'The English Beat': 'The Beat',
