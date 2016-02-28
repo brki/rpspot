@@ -68,6 +68,7 @@ class TrackSearch(object):
             '!Deladap': '!Dela Dap',  # Spotify seems wrong on this one
             '10 CC': '10cc',
             'AfroCelts': 'Afro Celt Sound System',
+            'Apollo Four Forty': 'Apollo 440',
             'Allman Brothers': 'The Allman Brothers Band',
             'Angélique Kidjo': 'Angelique Kidjo',
             'Bob Marley': 'Bob Marley & The Wailers',
@@ -77,6 +78,7 @@ class TrackSearch(object):
             'Ihtiyac Molasi': 'İhtiyaç Molası',
             'Iron & Wine and Calexico': 'Calexico / Iron and Wine',
             'Khachaturian': 'Aram Khachaturian',
+            'Ozzy Osborne': 'Ozzy Osbourne',
             'Santana Brothers': 'Santana',
             'Slainte Mhaith': 'Slainte Mhath',
             'Sixteen Horsepower': '16 Horsepower',
@@ -100,6 +102,7 @@ class TrackSearch(object):
             'Billy Bragg & Wilco': ['Billy Bragg', 'Wilco'],
             'Blanquito Man, Control Machete & Celso Piña': ['Blanquito Man', 'Control Machete', 'Celso Piña'],
             'Bloomfield, Kooper, Stills': ['Al Kooper', 'Steve Stills'], # Spotify seems wrong to exclude Bloomfield.
+            'Casualties of Cool': ['Devin Townsend', 'Ché Aimee Dorval'],
             'Damon Albarn & Friends': ['Damon Albarn', 'Malian Musicians'],
             'Danger Mouse & Daniele Luppi': ['Danger Mouse', 'Daniele Luppi'],
             'Danger Mouse & Sparklehorse': ['Danger Mouse', 'Sparklehorse'],
@@ -109,6 +112,7 @@ class TrackSearch(object):
             'Ella Fitzgerald & Joe Pass': ['Ella Fitzgerald', 'Joe Pass'],
             'Habib Koité & Bamada': ['Habib Koité', 'Bamada'],
             'J.J. Cale & Eric Clapton': ['J.J. Cale', 'Eric Clapton'],
+            'Jenny Lewis & the Watson Twins': ['Jenny Lewis', 'The Watson Twins'],
             'Leftover Salmon & Cracker': ['Leftover Salmon', 'Cracker'],
             'Robert Plant & Alison Krauss': ['Robert Plant', 'Alison Krauss'],
             'Ry Cooder & Manuel Galban': ['Ry Cooder', 'Manuel Galbán'],
