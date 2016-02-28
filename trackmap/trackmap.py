@@ -78,6 +78,7 @@ class TrackSearch(object):
             'Ihtiyac Molasi': 'İhtiyaç Molası',
             'Iron & Wine and Calexico': 'Calexico / Iron and Wine',
             'Khachaturian': 'Aram Khachaturian',
+            'Nikkfurie': 'La Caution',
             'Ozzy Osborne': 'Ozzy Osbourne',
             'Santana Brothers': 'Santana',
             'Slainte Mhaith': 'Slainte Mhath',
@@ -88,6 +89,7 @@ class TrackSearch(object):
             'Woven Hand': 'Wovenhand',
         },
         MAPPING_TYPE_ONE_TO_MANY: {
+            'Al Di Meola & Paco DeLucia': ['Al Di Meola', 'Paco de Lucía'],
             'Albert King & Stevie Ray Vaughan': ['Albert King', 'Stevie Ray Vaughan'],
             'Ali Farka Touré & Ry Cooder': ['Ali Farka Touré', 'Ry Cooder'],
             'Ali Farka Touré & Toumani Diabeté': ['Ali Farka Touré', 'Toumani Diabeté'],
@@ -110,6 +112,7 @@ class TrackSearch(object):
             'David Byrne and Brian Eno': ['David Byrne', 'Brian Eno'],
             'David Tiller & Enion Pelta': ['David Tiller', 'Enion Pelta'],
             'Ella Fitzgerald & Joe Pass': ['Ella Fitzgerald', 'Joe Pass'],
+            'Eric Clapton & Steve Winwood': ['Eric Clapton', 'Steve Winwood'],
             'Habib Koité & Bamada': ['Habib Koité', 'Bamada'],
             'J.J. Cale & Eric Clapton': ['J.J. Cale', 'Eric Clapton'],
             'Jenny Lewis & the Watson Twins': ['Jenny Lewis', 'The Watson Twins'],
