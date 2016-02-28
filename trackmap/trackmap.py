@@ -118,32 +118,34 @@ class TrackSearch(object):
         MAPPING_TYPE_ANY_OF: {
             # These will be used when comparing the results returned from Spotify:
             'compare': {
-                'Oliver Mtukudzi': ['Oliver Mtukudzi', 'Oliver Mtukudzi and The Black Spirits'],
-                'Ryan Adams': ['Ryan Adams', 'Ryan Adams & The Cardinals'],
+                '1 Giant Leap': ['Michael Stipe', 'Asha Bhosle'],
+                'Ben Harper': ['Ben Harper', 'Ben Harper And Relentless7'],
                 'BÃ©la Fleck': ['Béla Fleck', 'Béla Fleck and the Flecktones'],
                 'Béla Fleck': ['Béla Fleck', 'Béla Fleck and the Flecktones'],
-                'Ben Harper': ['Ben Harper', 'Ben Harper And Relentless7'],
-                'Josh Joplin Group': ['Josh Joplin', 'Josh Joplin Group'],
-                'Elvis Costello': ['Elvis Costello', 'Elvis Costello & The Attractions', 'Elvis Costello And The Roots'],
-                'Robyn Hitchcock': ['Robyn Hitchcock', 'Robyn Hitchcock & The Egyptians'],
                 'Easy Star All-Stars': ['Toots & The Maytals', 'Citizen Cope', 'The Meditations'],  # see album: Radiodread
-                'Raymond Kane': ['Raymond Kane', 'Ray Kane'],
                 'Elephant Revival': ['Elephant Revival', 'Elephant Revivial'],
-                '1 Giant Leap': ['Michael Stipe', 'Asha Bhosle'],
+                'Elvis Costello': ['Elvis Costello', 'Elvis Costello & The Attractions', 'Elvis Costello And The Roots'],
+                'Habib Koité & Bamada': ['Habib Koité', 'Bamada'],
+                'Josh Joplin Group': ['Josh Joplin', 'Josh Joplin Group'],
+                'Oliver Mtukudzi': ['Oliver Mtukudzi', 'Oliver Mtukudzi and The Black Spirits'],
+                'Raymond Kane': ['Raymond Kane', 'Ray Kane'],
+                'Robyn Hitchcock': ['Robyn Hitchcock', 'Robyn Hitchcock & The Egyptians'],
+                'Ryan Adams': ['Ryan Adams', 'Ryan Adams & The Cardinals'],
             },
             # These are used when searching Spotify; a separate search will be made for each separate name:
             'search': {
                 # Note: no need to add alternates if the alternates also start with the same name, because
                 #       Spotify will also match 'foo bar' if searching for an artist named 'foo'.
-                'Easy Star All-Stars': ['Toots & The Maytals', 'Citizen Cope', 'The Meditations'],  # see album: Radiodread
-                'Raymond Kane': ['Raymond Kane', 'Ray Kane'],
-                'Elephant Revival': ['Elephant Revival', 'Elephant Revivial'],
                 '1 Giant Leap': ['Michael Stipe', 'Asha Bhosle'],
+                'Easy Star All-Stars': ['Toots & The Maytals', 'Citizen Cope', 'The Meditations'],  # see album: Radiodread
+                'Elephant Revival': ['Elephant Revival', 'Elephant Revivial'],
+                'Raymond Kane': ['Raymond Kane', 'Ray Kane'],
             }
         },
         REPLACE_FOR_SEARCH_ONLY: {
             '10,000 Maniacs': 'Maniacs',  # Strange, but Spotify doesn't find it with 10000 Maniacs.
             'BÃ©la Fleck': 'Béla Fleck',
+            'Habib Koité & Bamada': 'Habib Koité',
             'Josh Joplin Group': 'Josh Joplin',
         },
     }
