@@ -111,6 +111,7 @@ class TrackSearch(object):
             'J.J. Cale & Eric Clapton': ['J.J. Cale', 'Eric Clapton'],
             'Leftover Salmon & Cracker': ['Leftover Salmon', 'Cracker'],
             'Robert Plant & Alison Krauss': ['Robert Plant', 'Alison Krauss'],
+            'Ry Cooder & Manuel Galban': ['Ry Cooder', 'Manuel Galbán'],
             'Vishwa Mohan Bhatt & Jerry Douglas': ['Vishwa Mohan Bhatt', 'Jerry Douglas'],
             'Willie and Lobo': ['Willie', 'Lobo'],
         },
