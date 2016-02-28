@@ -78,6 +78,7 @@ class TrackSearch(object):
             'Iron & Wine and Calexico': 'Calexico / Iron and Wine',
             'Khachaturian': 'Aram Khachaturian',
             'Santana Brothers': 'Santana',
+            'Slainte Mhaith': 'Slainte Mhath',
             'Sixteen Horsepower': '16 Horsepower',
             'Sonny Boy Williamson': 'Sonny Boy Williamson II',
             'The English Beat': 'The Beat',
