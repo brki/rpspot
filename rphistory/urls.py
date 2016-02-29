@@ -1,6 +1,6 @@
 from django.conf.urls import include, url
 
-from .views import correct_title, manually_checked, retry, unmatched
+from .views import correct_title, manually_checked, retry, set_isrc, unmatched
 
 
 urlpatterns = [
@@ -12,4 +12,5 @@ urlpatterns = [
     url(r'^unmatched/checked/(?P<song_id>\d+)/$', manually_checked, name='manually_checked'),
     url(r'^unmatched/retry/(?P<song_id>\d+)/$', retry, name='retry'),
     url(r'^unmatched/correct_title/(?P<song_id>\d+)/$', correct_title, name='correct_title'),
+    url(r'^unmatched/isrc/(?P<song_id>\d+)/$', set_isrc, name='set_isrc'),
 ]

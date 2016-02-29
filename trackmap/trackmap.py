@@ -85,6 +85,7 @@ class TrackSearch(object):
             'Slainte Mhaith': 'Slainte Mhath',
             'Sixteen Horsepower': '16 Horsepower',
             'Sonny Boy Williamson': 'Sonny Boy Williamson II',
+            'The Nightwatchman (Tom Morello)': 'Tom Morello: The Nightwatchman',
             'The English Beat': 'The Beat',
             'Trail of Dead': '...And You Will Know Us By The Trail Of Dead',
             'Woven Hand': 'Wovenhand',
@@ -206,16 +207,23 @@ class TrackSearch(object):
         and_artist_names_for_search, or_artist_names_for_search = self.map_artist_names(song.artists.all(), 'search')
         and_artist_names_for_compare, or_artist_names_for_compare = self.map_artist_names(song.artists.all(), 'compare')
         title = song.corrected_title or song.title
+        isrc = song.isrc
 
         # Query each possible or_artist_name separately, because an OR clause does not apply to only the artist names,
         # but instead seems to make all elements including the song, be considered as OR-ed elements.
         query_info = []
         for artist_name in or_artist_names_for_search:
-            query = self.build_query(title, [artist_name])
+            query = self.build_query(title, artist_names=[artist_name])
             query_info.append((query, title, and_artist_names_for_compare, or_artist_names_for_compare))
+            if isrc:
+                query = self.build_query(None, artist_names=[artist_name], isrc=isrc)
+                query_info.append((query, title, and_artist_names_for_compare, or_artist_names_for_compare))
         if and_artist_names_for_search:
-            query = self.build_query(title, and_artist_names_for_search)
+            query = self.build_query(title, artist_names=and_artist_names_for_search)
             query_info.append((query, title, and_artist_names_for_compare, or_artist_names_for_compare))
+            if isrc:
+                query = self.build_query(None, artist_names=and_artist_names_for_search, isrc=isrc)
+                query_info.append((query, title, and_artist_names_for_compare, or_artist_names_for_compare))
 
         return query_info
 
@@ -309,7 +317,7 @@ class TrackSearch(object):
         search_artist = self.prepare_text_for_search(search_artist)
         return 'artist:"{}"'.format(search_artist)
 
-    def build_query(self, track_title, artist_names=None, album_title=None):
+    def build_query(self, track_title, artist_names=None, album_title=None, isrc=None):
         """
         Builds a query based on the passed values.
 
@@ -319,11 +327,15 @@ class TrackSearch(object):
         :param track_title:
         :param artist_name: string or iterable of artist names
         :param album_title:
+        :param isrc: International Standard Recording Code.  If present, will be used instead of title.
         :return: query string
         """
-        search_track = self.strip_live_marker(track_title)
-        search_track = self.prepare_text_for_search(search_track)
-        q = ['track:"{}"'.format(search_track)]
+        if isrc:
+            q = ['isrc:"{}"'.format(isrc)]
+        else:
+            search_track = self.strip_live_marker(track_title)
+            search_track = self.prepare_text_for_search(search_track)
+            q = ['track:"{}"'.format(search_track)]
 
         if artist_names:
             for name in artist_names:

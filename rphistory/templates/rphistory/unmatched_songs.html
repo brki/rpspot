@@ -55,12 +55,20 @@
                                         </form>
                                     </p>
                                     <p>
-                                    <form action="{{ data.value.correct_title_action_url | safe }}" method="POST">
-                                        {% csrf_token %}
-                                        <input type="hidden" name="redirect_to" value="{{ data.value.redirect_url | safe }}" />
-                                        <input type="text" size="40" name="correct_title" value="{{ data.value.song_title }}" />
-                                        <input type="submit" value="{{ data.value.correct_title_button_text }}" />
-                                    </form>
+                                        <form action="{{ data.value.correct_title_action_url | safe }}" method="POST">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="redirect_to" value="{{ data.value.redirect_url | safe }}" />
+                                            <input type="text" size="40" name="correct_title" value="{{ data.value.song_title }}" />
+                                            <input type="submit" value="{{ data.value.correct_title_button_text }}" />
+                                        </form>
+                                    </p>
+                                    <p>
+                                        <form action="{{ data.value.isrc_action_url | safe }}" method="POST">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="redirect_to" value="{{ data.value.redirect_url | safe }}" />
+                                            <input type="text" size="40" name="isrc" value="{{ data.value.isrc }}" />
+                                            <input type="submit" value="{{ data.value.isrc_button_text }}" />
+                                        </form>
                                     </p>
                                 {% else %}
                                     <span id="{{ data.id }}">{{ data.value }}</span>

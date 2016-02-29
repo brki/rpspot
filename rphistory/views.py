@@ -1,4 +1,5 @@
 import datetime
+import re
 from urllib.parse import urlencode
 
 from django.core.management import call_command
@@ -11,6 +12,9 @@ from django.views.decorators.http import require_POST
 from trackmap import trackmap
 from .models import Song
 from trackmap.models import TrackSearchHistory
+
+
+isrc_pattern = re.compile(r'^[a-z]{2}[a-z0-9]{3}[0-9]{2}\d{5}$', re.IGNORECASE)
 
 
 def redirect_or_text_response(request, text="Thanks"):
@@ -98,6 +102,8 @@ def unmatched(request, country=None, page=1):
             'correct_title_button_text': 'Correct title / retry search',
             'song_title': s.corrected_title or s.title,
             'redirect_url': request.get_full_path(),
+            'isrc_action_url': reverse('set_isrc', args=[s.id]),
+            'isrc_button_text': 'Set ISRC'
         }
         song.append({'label': 'Actions', 'value': action_info, 'type': 'actions_info', 'id': 'action_list'})
 
@@ -136,6 +142,23 @@ def correct_title(request, song_id):
         return HttpResponse("Song already has this title")
 
     song.corrected_title = correct_title.strip()
+    song.save()
+
+    call_command('map_tracks', force=True, rp_song_id=song.rp_song_id)
+
+    return redirect_or_text_response(request)
+
+
+@login_required
+@require_POST
+def set_isrc(request, song_id):
+    song = get_object_or_404(Song, pk=song_id)
+    isrc = request.POST.get('isrc', '').strip()
+
+    if not isrc_pattern.match(isrc):
+        return HttpResponse("This doesn't look like a valid ISRC", status=400)
+
+    song.isrc = isrc
     song.save()
 
     call_command('map_tracks', force=True, rp_song_id=song.rp_song_id)
