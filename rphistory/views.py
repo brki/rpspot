@@ -76,7 +76,7 @@ def unmatched(request, country=None, page=1):
         query_string = urlencode({'q': search_string})
         rp_url = 'https://www.radioparadise.com/rp_2.php?#name=songinfo&song_id={}'.format(s.rp_song_id)
         query_info = track_search.spotify_query(s)
-        spotify_query = " / ".join([query for query, _, _, _ in query_info])
+        spotify_query = " / ".join([query for query, _, _, _, _ in query_info])
 
         song.append({'label': 'Title', 'value': s.title, 'type': 'text', 'id': 'song_title'})
         if s.corrected_title:
@@ -102,7 +102,7 @@ def unmatched(request, country=None, page=1):
             'correct_title_button_text': 'Correct title / retry search',
             'song_title': s.corrected_title or s.title,
             'redirect_url': request.get_full_path(),
-            'isrc': s.isrc,
+            'isrc': s.isrc or '',
             'isrc_action_url': reverse('set_isrc', args=[s.id]),
             'isrc_button_text': 'Set ISRC'
         }
