@@ -63,6 +63,9 @@ class TrackSearch(object):
     MAPPING_TYPE_ANY_OF = 'any_of'
     REPLACE_FOR_SEARCH_ONLY = 'replace_single_search_only'
 
+    ISRC_TRACK_MATCH_SCORE = 1.0
+    ISRC_ARTIST_MATCH_SCORE = 0.9
+
     rp_to_spotify_artist_map = {
         MAPPING_TYPE_REPLACE: {
             '!Deladap': '!Dela Dap',  # Spotify seems wrong on this one
@@ -222,16 +225,16 @@ class TrackSearch(object):
         query_info = []
         for artist_name in or_artist_names_for_search:
             query = self.build_query(title, artist_names=[artist_name])
-            query_info.append((query, title, and_artist_names_for_compare, or_artist_names_for_compare))
+            query_info.append((query, title, and_artist_names_for_compare, or_artist_names_for_compare, None))
             if isrc:
                 query = self.build_query(None, artist_names=[artist_name], isrc=isrc)
-                query_info.append((query, title, and_artist_names_for_compare, or_artist_names_for_compare))
+                query_info.append((query, title, and_artist_names_for_compare, or_artist_names_for_compare, isrc))
         if and_artist_names_for_search:
             query = self.build_query(title, artist_names=and_artist_names_for_search)
-            query_info.append((query, title, and_artist_names_for_compare, or_artist_names_for_compare))
+            query_info.append((query, title, and_artist_names_for_compare, or_artist_names_for_compare, None))
             if isrc:
                 query = self.build_query(None, artist_names=and_artist_names_for_search, isrc=isrc)
-                query_info.append((query, title, and_artist_names_for_compare, or_artist_names_for_compare))
+                query_info.append((query, title, and_artist_names_for_compare, or_artist_names_for_compare, isrc))
 
         return query_info
 
@@ -249,7 +252,7 @@ class TrackSearch(object):
 
         best_matches = {}
         matches_score = {}
-        for query, title, and_artist_names, or_artist_names in self.spotify_query(song):
+        for query, title, and_artist_names, or_artist_names, isrc in self.spotify_query(song):
             results = self.get_query_results(query)
             self.add_full_album_info(results)
             # TODO: check if any album_info matches were found.  If not, try to find album via asin.
@@ -258,11 +261,11 @@ class TrackSearch(object):
             #       # TODO: update rphistory album title and artists info?
             for item in results:
                 # If the artist or track are not found, no need to process this item.
-                track_info = self.extract_track_info(title, item)
+                track_info = self.extract_track_info(title, item, isrc)
                 if track_info is None:
                     continue
 
-                artist_info = self.extract_artist_info(song, and_artist_names, or_artist_names, item['artists'])
+                artist_info = self.extract_artist_info(song, and_artist_names, or_artist_names, item, isrc)
                 if artist_info is None:
                     continue
 
@@ -282,7 +285,7 @@ class TrackSearch(object):
 
     def create_tracks(self, song, market_tracks, market_scores):
         """
-        Create the tracks and artist objects, and collects the per-market TrackAvailability objects.
+        Create the track objects, and collects the per-market TrackAvailability objects.
 
         :param song: rphistory.Song object
         :param market_tracks: map of country name string => TrackArtistAlbum namedtumple
@@ -345,13 +348,14 @@ class TrackSearch(object):
             search_track = self.prepare_text_for_search(search_track)
             q = ['track:"{}"'.format(search_track)]
 
-        if artist_names:
-            for name in artist_names:
-                q.append(self.artist_query_fragment(name))
+            if artist_names:
+                for name in artist_names:
+                    q.append(self.artist_query_fragment(name))
 
-        if album_title:
-            search_album = self.prepare_text_for_search(album_title)
-            q.append('album:"{}"'.format(search_album))
+            if album_title:
+                search_album = self.prepare_text_for_search(album_title)
+                q.append('album:"{}"'.format(search_album))
+
         return ' '.join(q)
 
     def get_query_results(self, query, limit=None, max_items=None):
@@ -427,7 +431,7 @@ class TrackSearch(object):
                 return 0.8, a
         return 0.0, None
 
-    def extract_artist_info(self, song, artist_names, alternative_artist_names, artist_list):
+    def extract_artist_info(self, song, artist_names, alternative_artist_names, item, isrc):
         """
         Find a matching artist. There may be many artists, if there are then the match_score is proportionally
         higher according to the number of matched artist names.
@@ -438,9 +442,18 @@ class TrackSearch(object):
         :param Song song:
         :param artist_names: array of artist names provided by source
         :param artist_names: array of artist names, one of which should match, provided by source
-        :param artist_list: array of spotify API album artist results
+        :param item: spotify search result item with 'artists' key for array of spotify API album artist results
         :return: ArtistInfo
         """
+
+        artist_list = item['artists']
+
+        if self.item_has_matching_isrc(item, isrc):
+            return ArtistInfo(
+                id=artist_list[0]['id'],
+                name=artist_list[0]['name'],
+                multiple=len(artist_list) > 1,
+                match_score=self.ISRC_ARTIST_MATCH_SCORE)
 
         match_score = 0
         highest_artist_match_score = 0
@@ -465,8 +478,7 @@ class TrackSearch(object):
             # Ideally, all artist names should match.  If alternative artist names are provided,
             # then one of them should match.
             max_matches = len(artist_names) + int(len(alternative_artist_names) > 0)
-            artist_count = len(artist_list)
-            multiple =  artist_count > 1
+            multiple = len(artist_list) > 1
             score = match_score / max_matches
             return ArtistInfo(
                 id=best_artist_match['id'], name=best_artist_match['name'], multiple=multiple, match_score=score)
@@ -506,7 +518,12 @@ class TrackSearch(object):
             match_score=match_score
         )
 
-    def extract_track_info(self, track_title, item):
+    def extract_track_info(self, track_title, item, isrc):
+
+        # If it matches ths ISRC, it's the right track.
+        if self.item_has_matching_isrc(item, isrc):
+            return TrackInfo(id=item['id'], title=item['name'], match_score=self.ISRC_TRACK_MATCH_SCORE)
+
         track_simple = self.simplified_text(track_title)
         item_track_simple = self.simplified_text(item['name'])
 
@@ -721,3 +738,17 @@ class TrackSearch(object):
             return match.groups()[0]
         else:
             return track_title
+
+    def item_has_matching_isrc(self, item, isrc):
+        """
+        Check if the ISRC matches.
+
+        :param item: spotify search result item
+        :param isrc: string, or None
+        :return: bool
+        """
+        if isrc:
+            external_ids = item.get('external_ids')
+            if external_ids:
+                return isrc == external_ids.get('isrc')
+        return False
