@@ -106,7 +106,8 @@ class TrackSearch(object):
             'Beth Hart and Joe Bonamassa': ['Beth Hart', 'Joe Bonamassa'],
             'Billy Bragg & Wilco': ['Billy Bragg', 'Wilco'],
             'Blanquito Man, Control Machete & Celso Piña': ['Blanquito Man', 'Control Machete', 'Celso Piña'],
-            'Bloomfield, Kooper, Stills': ['Al Kooper', 'Steve Stills'], # Spotify seems wrong to exclude Bloomfield.
+            'Bloomfield, Kooper, Stills': ['Al Kooper', 'Steve Stills'],  # Spotify seems wrong to exclude Bloomfield.
+            'Buddy & Julie Miller': ['Buddy Miller', 'Julie Miller'],
             'Casualties of Cool': ['Devin Townsend', 'Ché Aimee Dorval'],
             'Damon Albarn & Friends': ['Damon Albarn', 'Malian Musicians'],
             'Danger Mouse & Daniele Luppi': ['Danger Mouse', 'Daniele Luppi'],
@@ -118,12 +119,16 @@ class TrackSearch(object):
             'Eric Clapton & Steve Winwood': ['Eric Clapton', 'Steve Winwood'],
             'Habib Koité & Bamada': ['Habib Koité', 'Bamada'],
             'J.J. Cale & Eric Clapton': ['J.J. Cale', 'Eric Clapton'],
+            'J.J. Cale  & Eric Clapton': ['J.J. Cale', 'Eric Clapton'],  # with two spaces!
             'Jenny Lewis & the Watson Twins': ['Jenny Lewis', 'The Watson Twins'],
             'Jonny Lang & Fisk Jubilee Singers': ['Jonny Lang', 'The Fisk Jubilee Singers'],
+            'Imogen Heap & Vishal-Shekhar': ['Imogen Heap', 'Vishal Shekhar'],
+            'Leo Kottke & Mike Gordon': ['Leo Kottke', 'Mike Gordon'],
             'Les McCann & Eddie Harris': ['Les McCann', 'Eddie Harris'],
             'Leftover Salmon & Cracker': ['Leftover Salmon', 'Cracker'],
             'Los Lobos & Antonio Banderas': ['Los Lobos', 'Antonio Banderas'],
             'Paul McCartney & Wings': ['Paul McCartney', 'Wings'],
+            'Paul & Linda McCartney': ['Paul McCartney', 'Linda McCartney'],
             'Robert Plant & Alison Krauss': ['Robert Plant', 'Alison Krauss'],
             'Ry Cooder & Manuel Galban': ['Ry Cooder', 'Manuel Galbán'],
             'Ungar, Mason & friends': ['Jay Ungar', 'Molly Mason'],
