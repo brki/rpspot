@@ -14,7 +14,7 @@ from .models import Song
 from trackmap.models import TrackSearchHistory
 
 
-isrc_pattern = re.compile(r'^[a-z]{2}[a-z0-9]{3}[0-9]{2}\d{5}$', re.IGNORECASE)
+isrc_pattern = re.compile(r'^[a-z]{2}-?[a-z0-9]{3}-?[0-9]{2}-?\d{5}$', re.IGNORECASE)
 
 
 def redirect_or_text_response(request, text="Thanks"):

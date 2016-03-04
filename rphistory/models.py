@@ -48,7 +48,7 @@ class Song(models.Model):
     corrected_title = models.CharField(max_length=255, null=True, blank=True)
     rp_song_id = models.IntegerField(unique=True, null=False)
     album = models.ForeignKey(Album, related_name='songs')
-    isrc = models.CharField(max_length=12, null=True, blank=True)
+    isrc = models.CharField(max_length=15, null=True, blank=True)
 
     objects = models.Manager()
     unmatched = UnmatchedSongQuerySet.as_manager()
