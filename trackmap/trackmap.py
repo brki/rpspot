@@ -121,9 +121,11 @@ class TrackSearch(object):
             'Ella Fitzgerald & Joe Pass': ['Ella Fitzgerald', 'Joe Pass'],
             'Eric Clapton & Steve Winwood': ['Eric Clapton', 'Steve Winwood'],
             'Habib Koité & Bamada': ['Habib Koité', 'Bamada'],
+            'Jackson Browne': ['Jackson Browne', 'Bonnie Raitt'],
             'J.J. Cale & Eric Clapton': ['J.J. Cale', 'Eric Clapton'],
             'J.J. Cale  & Eric Clapton': ['J.J. Cale', 'Eric Clapton'],  # with two spaces!
             'Jenny Lewis & the Watson Twins': ['Jenny Lewis', 'The Watson Twins'],
+            'Jerry Garcia & David Grisman': ['Jerry Garcia', 'David Grisman'],
             'Jonny Lang & Fisk Jubilee Singers': ['Jonny Lang', 'The Fisk Jubilee Singers'],
             'Imogen Heap & Vishal-Shekhar': ['Imogen Heap', 'Vishal Shekhar'],
             'Leo Kottke & Mike Gordon': ['Leo Kottke', 'Mike Gordon'],
