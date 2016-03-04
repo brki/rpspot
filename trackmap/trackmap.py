@@ -95,6 +95,7 @@ class TrackSearch(object):
             'The Nightwatchman (Tom Morello)': 'Tom Morello: The Nightwatchman',
             'The English Beat': 'The Beat',
             'Trail of Dead': '...And You Will Know Us By The Trail Of Dead',
+            'The Trash Can Sinatras': 'Trashcan Sinatras',
             'Woven Hand': 'Wovenhand',
         },
         MAPPING_TYPE_ONE_TO_MANY: {
