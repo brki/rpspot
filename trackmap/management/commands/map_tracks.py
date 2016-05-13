@@ -25,13 +25,15 @@ class Command(BaseCommand):
                             help='Only process the given radio paradise song id (Song.rp_song_id value)')
         parser.add_argument('--artistid', dest='artist_id', nargs='?', type=int, default=None,
                             help='Process all songs by the artist (Artist.id)')
+        parser.add_argument('--oldest', dest='oldest', action='store_true', default='false',
+                            help='Orders the results by the oldest track search date')
         parser.add_argument('--delete-all-references-first', action='store_true', dest='delete_all_references',
                             default=False,
                             help='Delete all Trackmap references to song.  While processing a song '
                                  'with --force will remove all country-specific track availability '
                                  'mappings before creating the new mappings, it will not remove the track '
-                                 'information or the album ' 'information.  Using this option will remove these '
-                                 'references, too ' '(album information will not be deleted unless no other tracks '
+                                 'information or the album information.  Using this option will remove these '
+                                 'references, too (album information will not be deleted unless no other tracks '
                                  'refer to the album).  Note that it is necessary to also use the --force argument '
                                  'if you want to reprocess the song(s) even if they have already been mapped.')
         parser.add_argument('--slice', dest='slice_string', nargs='?', type=str, default=None,
@@ -46,12 +48,17 @@ class Command(BaseCommand):
         artist_id = options['artist_id']
         delete_all_references = options['delete_all_references']
         force = options['force']
+        oldest = options['oldest']
 
         if limit is not None and slice_string is not None:
             raise ValueError("Only one of --limit or --slice can be used.")
 
         slice_tuple = None
-        order_by = 'search_history__id'
+
+        if oldest:
+            order_by = 'search_history__search_time'
+        else:
+            order_by = 'search_history__id'
         if slice_string is not None:
             try:
                 lower_string, higher_string = slice_string.split(':')
