@@ -1,6 +1,5 @@
 django==1.9.4
-# spotipy==2.3.7
--e git+https://github.com/brki/spotipy@3b85e5f7c50b42078a792734205fc66416066a05#egg=spotipy
+spotipy==2.3.7
 beautifulsoup4==4.4.1
 django-environ==0.4.0
 django-ipware==1.1.3
