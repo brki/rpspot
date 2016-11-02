@@ -384,14 +384,7 @@ class TrackSearch(object):
         offset = 0
         keep_going = True
         while keep_going:
-            # TODO: undo workaround after Spotify fixes the bug:
-            # Workaround for https://github.com/spotify/web-api/issues/194 .
-            # This workaround adds the CH market; the result is that tracks for the US/CA/MX
-            # markets are (mostly, at least) excluded.
-            # Without this workaround (e.g. without supplying any market parameter),
-            # only tracks for US/CA/MX are found.
-            # original line: results = self.spotify.search(q=query, type='track', limit=limit, offset=offset)
-            results = self.spotify.search(q=query, type='track', limit=limit, offset=offset, market='CH')
+            results = self.spotify.search(q=query, type='track', limit=limit, offset=offset)
             items = results['tracks']['items']
             count = len(items)
             if count:
