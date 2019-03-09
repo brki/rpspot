@@ -279,7 +279,10 @@ class TrackSearch(object):
 
                 # Find the best match per country.
                 score = sum(info.match_score for info in [track_info, artist_info, album_info]) * 100
-                for country in item['available_markets']:
+                # 2019-03: Spotify seems to have removed the 'available_markets' info altogether.
+                # As a workaround, use just the swiss market.
+                markets = item.get('available_markets', ['CH'])
+                for country in markets:
                     previous_score = matches_score.get(country, -1)
                     if score > previous_score:
                         matches_score[country] = score
